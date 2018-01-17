@@ -7,7 +7,12 @@ defmodule Jorb.Mixfile do
       version: "0.1.0",
       elixir: "~> 1.5",
       start_permanent: Mix.env == :prod,
-      deps: deps()
+      deps: deps(),
+      name: "Jorb",
+      source_url: "https://github.com/appcues/jorb",
+      homepage_url: "http://hexdocs.pm/jorb",
+      docs: [main: "Jorb",
+             extras: ["README.md"]]
     ]
   end
 
@@ -27,6 +32,7 @@ defmodule Jorb.Mixfile do
       {:hackney, "~> 1.9"},
       {:sweet_xml, "~> 0.6"},
       {:poison, "~> 3.0"},
+      {:ex_doc, "~> 0.16", only: :dev, runtime: false},
     ]
   end
 end

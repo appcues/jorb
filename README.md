@@ -1,5 +1,6 @@
 # Jorb
 
+[![Coach Z](http://www.hrwiki.org/w/images/3/3e/Old_homestar_jorb.PNG)](https://www.youtube.com/watch?v=8C4ayBHTES0)
 > I uh, I say you did a great _jorb_ out there
 
 Jorb is a simple Elixir library for running publishing jobs to SQS to run them later
@@ -47,3 +48,5 @@ be found at [https://hexdocs.pm/jorb](https://hexdocs.pm/jorb).
 Jorb is copyright 2018 Appcues, Inc.
 
 Jorb is licensed under the MIT license
+
+_A Jorb Well Done_ is by The Brothers Chaps

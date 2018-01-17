@@ -2,7 +2,7 @@ defmodule Jorb do
   @moduledoc ~S"""
   # Jorb
 
-  Ya done a great... job.
+  I uh, I say you did a great _jorb_ out there
 
   ## What
 
@@ -26,8 +26,8 @@ defmodule Jorb do
   ```
 
   Then, queue jobs to be performed later with `perform_async`
-  `Demo.Jobs.TestJob.perform_async("Andy")`
-  `:ok`
+
+  ```Demo.Jobs.TestJob.perform_async("Andy")```
 
   And sometime later "Hello Andy" will be output to the console
 
