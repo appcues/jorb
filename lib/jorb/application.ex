@@ -29,7 +29,6 @@ defmodule Jorb.Application do
 
   def jobs_modules do
     {:ok, all_modules} = Application.get_env(:jorb, :application) |> :application.get_key(:modules)
-    IO.inspect all_modules
     Enum.filter(all_modules, fn(mod) ->
       mod
       |> Atom.to_string
