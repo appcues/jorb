@@ -31,7 +31,7 @@ defmodule Jorb.Mixfile do
       {:ex_aws_sqs, "~> 2.0"},
       {:hackney, "~> 1.9"},
       {:sweet_xml, "~> 0.6"},
-      {:poison, "~> 3.0"},
+      {:poison, "~> 1.0"},
       {:ex_doc, "~> 0.16", only: :dev, runtime: false},
     ]
   end
