@@ -4,7 +4,8 @@ use Mix.Config
 
 config :jorb,
   application: :jorb,
-  fetching_processes: 4
+  fetching_processes: 4,
+  namespace: "Elixir.Jorb.Test."
 
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this
