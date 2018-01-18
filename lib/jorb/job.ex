@@ -2,6 +2,10 @@ defmodule Jorb.Job do
 
   @moduledoc ~S"""
   `Jorb.Job` defines the mixin that you will use to create jobs.
+
+  Define the `c:queue_name/0` and `c:perform/1` callbacks in the including module.
+
+  Jorb will not take care of creating queues for you, that must be done ahead of time.
   """
 
   @callback queue_name :: String.t

@@ -1,5 +1,9 @@
 defmodule Jorb.Broker do
+  @moduledoc ~S"""
+  Jorb.Broker
 
+  Takes a batch of messages, decodes them, sends them off to their target, then deletes them.
+  """
   use GenServer
   use Elixometer
   alias ExAws.SQS
@@ -9,6 +13,19 @@ defmodule Jorb.Broker do
     GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
   end
 
+  @doc ~S"""
+  Process a batch of messages asynchronously. Called by `Jorb.Fetcher`.
+
+  The body of the SQS message will contain a "target" key whose value is the module
+  that will have its' `perform` function called. Funny enough, it's the same module
+  that called `perform_async` provided by `Jorb.Job`.
+
+  A batch of messages is however many SQS hands us back in one request, so, up to 10.
+
+  It's fine that we don't ask for acknowledgement here, since we're completely tolerant of failures.
+  If a message (or batch, even) gets dropped, they'll be requeued once their visibility timeout
+  passes.
+  """
   def process_batch(messages) do
     GenServer.cast(__MODULE__, {:process_batch, messages})
   end
