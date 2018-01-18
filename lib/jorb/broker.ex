@@ -36,7 +36,7 @@ defmodule Jorb.Broker do
         # finally, delete the message
         SQS.delete_message(queue_name, message[:receipt_handle]) |> ExAws.request!
 
-        update_counter("jorb.sqs.messages", 1)
+        update_counter("jorb.sqs.messages", -1)
       end
     end)
 
