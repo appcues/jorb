@@ -26,7 +26,7 @@ defmodule Jorb.Broker do
       # since the message will be re-queued if we fail anywhere along the way
       spawn fn ->
         # rehydrate the message's body (the payload) then hand it to the process method
-        # the payload is a map of %{ via: <module name>, body: %{ <actual params> } }
+        # the payload is a map of %{ "target" => <module name>, "body" => %{ <actual params> } }
         %{ "target" => module_name, "body" => payload } = Poison.decode!(message.body)
         target = String.to_existing_atom(module_name)
         queue_name = apply(target, :queue_name, [])
