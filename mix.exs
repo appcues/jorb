@@ -32,6 +32,7 @@ defmodule Jorb.Mixfile do
       {:hackney, "~> 1.9"},
       {:sweet_xml, "~> 0.6"},
       {:poison, "~> 1.0"},
+      {:elixometer, "~> 1.2"},
       {:ex_doc, "~> 0.16", only: :dev, runtime: false},
     ]
   end

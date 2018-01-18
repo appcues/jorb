@@ -1,7 +1,7 @@
 defmodule Jorb.Broker do
 
-  require Logger
   use GenServer
+  use Elixometer
   alias ExAws.SQS
 
   ## Contract
@@ -17,7 +17,7 @@ defmodule Jorb.Broker do
 
   # State is irrelevant
   def init(:ok) do
-    {:ok, []}
+    {:ok, :ignored}
   end
 
   def handle_cast({:process_batch, messages}, state) do
@@ -35,6 +35,8 @@ defmodule Jorb.Broker do
 
         # finally, delete the message
         SQS.delete_message(queue_name, message[:receipt_handle]) |> ExAws.request!
+
+        update_counter("jorb.sqs.messages", 1)
       end
     end)
 

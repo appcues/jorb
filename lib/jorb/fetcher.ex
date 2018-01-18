@@ -1,5 +1,4 @@
 defmodule Jorb.Fetcher do
-  require Logger
   use GenServer
   alias ExAws.SQS
 
@@ -19,7 +18,6 @@ defmodule Jorb.Fetcher do
   def handle_info(:poll_sqs, queue_name) do
     poll_sqs()
 
-    #Logger.debug "Polling SQS for messages"
     response = SQS.receive_message(queue_name, max_number_of_messages: 10) |> ExAws.request!
     %{body: %{messages: messages}} = response
 

@@ -10,22 +10,23 @@ defmodule Jorb.Job do
   @doc false
   defmacro __using__(_opts) do
     quote do
-      require Logger
+      use Elixometer
 
       @behaviour Jorb.Job
 
       alias ExAws.SQS
 
-      @spec perform_async(Map.t) :: :ok
+      @doc ~S"""
+      Queue a job to be performed later. Send the name of the enqueueing module along
+      so we know which module to send the params later
+      """
+      @spec perform_async(Poison.Encoder.t) :: :ok
+      @timed(key: :auto)
       def perform_async(payload) do
-        before = :erlang.monotonic_time(:milli_seconds)
-
         # Include who sent the message, so we can figure out who's gotta deal with it later
         final_payload = %{ target: __MODULE__, body: payload }
         SQS.send_message(queue_name(), Poison.encode!(final_payload)) |> ExAws.request!
-
-        Logger.debug("SQS write time: #{:erlang.monotonic_time(:milli_seconds) - before}")
-
+        update_counter("jorb.sqs.messages", 1)
         :ok
       end
 

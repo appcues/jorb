@@ -5,26 +5,13 @@ use Mix.Config
 config :jorb,
   application: :jorb,
   fetching_processes: 4,
-  namespace: "Elixir.Jorb.Test."
+  namespace: "Elixir.Jorb.Jobs."
 
-# This configuration is loaded before any dependency and is restricted
-# to this project. If another project depends on this project, this
-# file won't be loaded nor affect the parent project. For this reason,
-# if you want to provide default values for your application for
-# 3rd-party users, it should be done in your "mix.exs" file.
-
-# You can configure your application as:
-#
-#     config :jorb, key: :value
-#
-# and access this configuration in your application as:
-#
-#     Application.get_env(:jorb, :key)
-#
-# You can also configure a 3rd-party app:
-#
-#     config :logger, level: :info
-#
+config(:exometer_core, report: [reporters: [{:exometer_report_tty, []}]])
+config(:elixometer,
+  reporter: :exometer_report_tty,
+  env: Mix.env,
+  metric_prefix: "jorb")
 
 # It is also possible to import configuration files, relative to this
 # directory. For example, you can emulate configuration per environment
