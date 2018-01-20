@@ -7,7 +7,8 @@ defmodule Jorb.Fetcher do
   end
 
   def poll_sqs() do
-    Process.send_after(self(), :poll_sqs, 5000)
+    poll_timeout = Application.get_env(:jorb, :fetching_timer)
+    Process.send_after(self(), :poll_sqs, poll_timeout)
   end
 
   def init(queue_name) do
