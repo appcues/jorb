@@ -2,11 +2,11 @@ defmodule Jorb.JobTest do
   use ExUnit.Case
   doctest Jorb.Job
 
-  alias Jorb.Test.{BadJob,GoodJob}
+  alias Jorb.Test.{BadJob, GoodJob}
 
   test "bad job raises" do
     assert_raise(RuntimeError, fn ->
-      BadJob.queue_name
+      BadJob.queue_name()
     end)
 
     assert_raise(RuntimeError, fn ->
