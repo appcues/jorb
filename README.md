@@ -37,13 +37,13 @@ There are a few config options that need to be set for Jorb to run correctly. He
 config :jorb,
   application: :jorb,
   fetching_processes: 4,
-  fetching_timeout: 1000,
+  fetching_timer: 1000,
   namespace: "Elixir.Jorb.Jobs."
 ```
 
 * application: this is the name of your app (the same one from `mix.exs`)
 * fetching_processes: this is how many processes are pulling from SQS simultaneously PER QUEUE
-* fetching_timeout: this is how often the fetchers poll SQS
+* fetching_timer: this is how often the fetchers poll SQS
 * namespace: this is the namespace that your jobs (things `use`ing `Jorb.Job`) live in.
 
 It is important that your jobs share a namespace, so that `Jorb` can automatically find out the
