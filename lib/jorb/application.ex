@@ -6,9 +6,11 @@ defmodule Jorb.Application do
   use Application
 
   def start(_type, _args) do
+    import Supervisor.Spec, warn: false
     # List all child processes to be supervised
     children =
       [
+        supervisor(Registry, [:duplicate, :fetcher_registry]),
         {Jorb.Broker, []}
       ] ++ fetchers_per_job()
 
