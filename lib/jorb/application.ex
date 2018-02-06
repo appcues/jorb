@@ -8,11 +8,7 @@ defmodule Jorb.Application do
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
     # List all child processes to be supervised
-    children =
-      [
-        supervisor(Registry, [:duplicate, :fetcher_registry]),
-        {Jorb.Broker, []}
-      ] ++ fetchers_per_job()
+    children = fetchers_per_queue()
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
@@ -20,20 +16,17 @@ defmodule Jorb.Application do
     Supervisor.start_link(children, opts)
   end
 
-  def fetchers_per_job do
-    fetching_processes = Application.get_env(:jorb, :fetching_processes)
-
-    Enum.flat_map(jobs_modules(), fn mod ->
+  def fetchers_per_queue do
+    Enum.map(jobs_modules(), fn mod ->
       queue_name = apply(mod, :queue_name, [])
 
-      Stream.cycle([{Jorb.Fetcher, queue_name}])
-      |> Enum.take(fetching_processes)
+      {Jorb.Fetcher, queue_name}
     end)
   end
 
   def jobs_modules do
-    {:ok, all_modules} =
-      Application.get_env(:jorb, :application) |> :application.get_key(:modules)
+    {:ok, all_modules} = Application.get_env(:jorb, :application)
+                         |> :application.get_key(:modules)
 
     Enum.filter(all_modules, fn mod ->
       mod
