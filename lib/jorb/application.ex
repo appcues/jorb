@@ -25,8 +25,9 @@ defmodule Jorb.Application do
   end
 
   def jobs_modules do
-    {:ok, all_modules} = Application.get_env(:jorb, :application)
-                         |> :application.get_key(:modules)
+    {:ok, all_modules} =
+      Application.get_env(:jorb, :application)
+      |> :application.get_key(:modules)
 
     Enum.filter(all_modules, fn mod ->
       mod

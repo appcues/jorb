@@ -20,15 +20,15 @@ defmodule Jorb.Fetcher do
   def handle_info(:poll_sqs, queue_name) do
     poll_sqs()
 
-
     1..Application.get_env(:jorb, :fetching_processes)
-    |> Enum.each(fn(_) ->
+    |> Enum.each(fn _ ->
+      spawn(fn ->
+        %{body: %{messages: messages}} =
+          SQS.receive_message(queue_name, max_number_of_messages: 10)
+          |> ExAws.request!()
 
-      %{body: %{messages: messages}} = SQS.receive_message(queue_name, max_number_of_messages: 10)
-                                       |> ExAws.request!()
-
-
-      Jorb.Broker.process_batch(messages)
+        Jorb.Broker.process_batch(messages)
+      end)
     end)
 
     {:noreply, queue_name}
