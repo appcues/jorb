@@ -5,13 +5,17 @@ use Mix.Config
 config :jorb,
   application: :jorb,
   fetching_processes: 4,
+  fetching_timer: 1000,
   namespace: "Elixir.Jorb.Jobs."
 
 config(:exometer_core, report: [reporters: [{:exometer_report_tty, []}]])
-config(:elixometer,
+
+config(
+  :elixometer,
   reporter: :exometer_report_tty,
-  env: Mix.env,
-  metric_prefix: "jorb")
+  env: Mix.env(),
+  metric_prefix: "jorb"
+)
 
 # It is also possible to import configuration files, relative to this
 # directory. For example, you can emulate configuration per environment
