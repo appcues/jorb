@@ -11,7 +11,15 @@ defmodule Jorb.Mixfile do
       name: "Jorb",
       source_url: "https://github.com/appcues/jorb",
       homepage_url: "http://hexdocs.pm/jorb",
-      docs: [main: "Jorb", extras: ["README.md"]]
+      docs: [main: "Jorb", extras: ["README.md"]],
+      files: ~w(mix.exs lib LICENSE.md README.md CHANGELOG.md),
+      package: [
+        maintainers: ["Andy LeClair"],
+        licenses: ["MIT"],
+        links: %{
+          "GitHub" => "https://github.com/appcues/jorb"
+        }
+      ]
     ]
   end
 
