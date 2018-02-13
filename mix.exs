@@ -11,6 +11,7 @@ defmodule Jorb.Mixfile do
       name: "Jorb",
       source_url: "https://github.com/appcues/jorb",
       homepage_url: "http://hexdocs.pm/jorb",
+      description: "A simple job publisher/processor for Elixir",
       docs: [main: "Jorb", extras: ["README.md"]],
       files: ~w(mix.exs lib LICENSE.md README.md CHANGELOG.md),
       package: [
@@ -39,7 +40,6 @@ defmodule Jorb.Mixfile do
       {:hackney, "~> 1.9"},
       {:sweet_xml, "~> 0.6"},
       {:poison, "~> 1.0"},
-      {:lager, ">= 3.2.1", override: true},
       {:elixometer, "~> 1.2"},
       {:ex_doc, "~> 0.16", only: :dev, runtime: false}
     ]
