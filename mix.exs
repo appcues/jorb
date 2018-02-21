@@ -4,7 +4,7 @@ defmodule Jorb.Mixfile do
   def project do
     [
       app: :jorb,
-      version: "0.1.0",
+      version: "0.1.1",
       elixir: "~> 1.5",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
