@@ -4,7 +4,6 @@ defmodule Jorb.Broker do
 
   Takes a batch of messages, decodes them, sends them off to their target, then deletes them.
   """
-  use Elixometer
   alias ExAws.SQS
 
   @doc ~S"""
@@ -36,8 +35,6 @@ defmodule Jorb.Broker do
 
         # finally, delete the message
         SQS.delete_message(queue_name, message[:receipt_handle]) |> ExAws.request!()
-
-        update_counter("jorb.sqs.messages", -1)
       end)
     end)
 
