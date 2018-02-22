@@ -13,8 +13,6 @@ defmodule Jorb.Job do
   @doc false
   defmacro __using__(_opts) do
     quote do
-      use Elixometer
-
       @behaviour Jorb.Job
 
       alias ExAws.SQS
@@ -29,7 +27,6 @@ defmodule Jorb.Job do
         # Include who sent the message, so we can figure out who's gotta deal with it later
         final_payload = %{target: __MODULE__, body: payload}
         SQS.send_message(queue_name(), Poison.encode!(final_payload)) |> ExAws.request!()
-        update_counter("jorb.sqs.messages", 1)
         :ok
       end
 
