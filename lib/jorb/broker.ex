@@ -34,7 +34,7 @@ defmodule Jorb.Broker do
         apply(target, :perform, [payload])
 
         # finally, delete the message
-        SQS.delete_message(queue_name, message[:receipt_handle]) |> ExAws.request!()
+        Jorb.backend().finalize(queue_name, message)
       end)
     end)
 
