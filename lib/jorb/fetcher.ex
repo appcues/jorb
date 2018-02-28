@@ -1,4 +1,9 @@
 defmodule Jorb.Fetcher do
+  @moduledoc ~S"""
+  Jorb.Fetcher
+
+  Fetch a batch of messages from the given queue on a timer
+  """
   require Logger
   use GenServer
   alias ExAws.SQS

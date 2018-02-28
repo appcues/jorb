@@ -23,6 +23,8 @@ defmodule Jorb.Backends.File do
     ensure_queue_dir(queue_name)
     files = queue_dir(queue_name) |> File.ls!()
 
+    # We're atomizing the keys on the files we read
+    # to maintain parity with how they come out of SQS
     if Enum.empty?(files) do
       []
     else
