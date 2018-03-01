@@ -4,7 +4,6 @@ defmodule Jorb.Broker do
 
   Takes a batch of messages, decodes them, sends them off to their target, then deletes them.
   """
-  alias ExAws.SQS
 
   @doc ~S"""
   Process a batch of messages asynchronously. Called by `Jorb.Fetcher`.

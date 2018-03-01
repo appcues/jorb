@@ -16,5 +16,5 @@ defmodule Jorb.Backend do
   @callback enqueue(String.t(), Map.t()) :: {:ok, Map.t()} | {:error, any}
   @callback dequeue(String.t()) :: [Map.t()]
   @callback finalize(String.t(), Map.t()) :: :ok | {:error, any}
-  @callback purge(String.t()) :: :ok | :error
+  @callback purge(String.t()) :: :ok | {:error, any}
 end

@@ -18,6 +18,7 @@ defmodule Jorb.Fetcher do
   end
 
   def init(queue_name) do
+    Jorb.backend().setup(queue_name)
     poll_queue()
     {:ok, queue_name}
   end
