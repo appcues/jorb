@@ -29,8 +29,13 @@ defmodule Jorb.Fetcher do
     1..Application.get_env(:jorb, :fetching_processes)
     |> Enum.each(fn _ ->
       spawn(fn ->
-        Jorb.backend().dequeue(queue_name)
-        |> Jorb.Broker.process_batch()
+        # TODO: currently we don't do anything with this error
+        # but we should probably provide a callback or something
+        # so consumers of Jorb can like report to sentry or something
+        case Jorb.backend().dequeue(queue_name) do
+          {:ok, messages} -> Jorb.Broker.process_batch()
+          {:error, err} -> raise err
+        end
       end)
     end)
 

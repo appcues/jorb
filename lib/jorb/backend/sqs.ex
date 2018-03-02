@@ -21,7 +21,7 @@ defmodule Jorb.Backend.SQS do
          {:ok, %{body: %{messages: messages}}} <- ExAws.request(request) do
       messages
     else
-      err -> []
+      err -> err
     end
   end
 

@@ -38,7 +38,7 @@ defmodule Jorb.Backend.File do
       |> atomize_message_keys
       |> List.wrap()
     else
-      _ -> []
+      err -> err
     end
   end
 
