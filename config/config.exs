@@ -7,7 +7,7 @@ config :jorb,
   fetching_processes: 4,
   fetching_timer: 1000,
   namespace: "Elixir.Jorb.Jobs.",
-  backend: Jorb.Backends.File
+  backend: Jorb.Backend.File
 
 # It is also possible to import configuration files, relative to this
 # directory. For example, you can emulate configuration per environment

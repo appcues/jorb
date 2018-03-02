@@ -1,4 +1,4 @@
-defmodule Jorb.Backends.SQS do
+defmodule Jorb.Backend.SQS do
   @behaviour Jorb.Backend
   alias ExAws.SQS
 

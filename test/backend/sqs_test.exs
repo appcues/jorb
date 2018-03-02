@@ -1,3 +1,3 @@
-defmodule Jorb.Backends.SQSTest do
+defmodule Jorb.Backend.SQSTest do
   use ExUnit.Case, async: true
 end

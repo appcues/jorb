@@ -1,4 +1,4 @@
-defmodule Jorb.Backends.File do
+defmodule Jorb.Backend.File do
   @moduledoc ~S"""
   File-based backend for light queueing.
 
