@@ -41,9 +41,12 @@ defmodule Jorb.Backend.File do
          message_path <- Path.join(dir, message_file),
          {:ok, raw_message} <- File.read(message_path),
          {:ok, message} <- Poison.decode(raw_message) do
-      message
-      |> atomize_message_keys
-      |> List.wrap()
+      out =
+        message
+        |> atomize_message_keys
+        |> List.wrap()
+
+      {:ok, out}
     else
       err -> err
     end
