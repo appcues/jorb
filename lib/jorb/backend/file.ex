@@ -3,13 +3,20 @@ defmodule Jorb.Backend.File do
   File-based backend for light queueing.
 
   You probably don't want to use this for production load.
+
+  Restricted to 1 fetching process per queue currently.
   """
   @behaviour Jorb.Backend
-
   def setup(queue_name) do
+    if Application.get_env(:jorb, :fetching_processes) != 1 do
+      raise "File queueing backend is currently restricted to 1 process per queue"
+    end
+
     unless File.exists?(queue_dir(queue_name)) do
       queue_dir(queue_name) |> File.mkdir_p!()
     end
+
+    :ok
   end
 
   def enqueue(queue_name, payload) do

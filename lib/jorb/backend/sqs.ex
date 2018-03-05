@@ -3,13 +3,13 @@ defmodule Jorb.Backend.SQS do
   alias ExAws.SQS
 
   def setup(queue_name) do
-    SQS.create_queue() |> ExAws.request!()
+    SQS.create_queue(queue_name) |> ExAws.request!()
   end
 
   def enqueue(queue_name, payload) do
     with {:ok, encoded} <- Poison.encode(payload),
          message <- SQS.send_message(queue_name, encoded),
-         {:ok, response} <- ExAws.request(message) do
+         {:ok, _response} <- ExAws.request(message) do
       {:ok, payload}
     else
       err -> err
@@ -31,7 +31,7 @@ defmodule Jorb.Backend.SQS do
 
   def purge(queue_name) do
     with request <- SQS.purge_queue(queue_name),
-         {:ok, _response} <- ExAws.request() do
+         {:ok, _response} <- ExAws.request(request) do
       :ok
     else
       err -> err

@@ -6,7 +6,6 @@ defmodule Jorb.Fetcher do
   """
   require Logger
   use GenServer
-  alias ExAws.SQS
 
   def start_link(queue_name) do
     GenServer.start_link(__MODULE__, queue_name)
@@ -33,7 +32,7 @@ defmodule Jorb.Fetcher do
         # but we should probably provide a callback or something
         # so consumers of Jorb can like report to sentry or something
         case Jorb.backend().pull(queue_name) do
-          {:ok, messages} -> Jorb.Broker.process_batch()
+          {:ok, messages} -> Jorb.Broker.process_batch(messages)
           {:error, err} -> raise err
         end
       end)

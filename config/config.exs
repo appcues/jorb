@@ -4,7 +4,7 @@ use Mix.Config
 
 config :jorb,
   application: :jorb,
-  fetching_processes: 4,
+  fetching_processes: 1,
   fetching_timer: 1000,
   namespace: "Elixir.Jorb.Jobs.",
   backend: Jorb.Backend.File
