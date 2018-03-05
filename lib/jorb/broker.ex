@@ -4,7 +4,6 @@ defmodule Jorb.Broker do
 
   Takes a batch of messages, decodes them, sends them off to their target, then deletes them.
   """
-  alias ExAws.SQS
 
   @doc ~S"""
   Process a batch of messages asynchronously. Called by `Jorb.Fetcher`.
@@ -34,7 +33,7 @@ defmodule Jorb.Broker do
         apply(target, :perform, [payload])
 
         # finally, delete the message
-        SQS.delete_message(queue_name, message[:receipt_handle]) |> ExAws.request!()
+        Jorb.backend().finalize(queue_name, message)
       end)
     end)
 

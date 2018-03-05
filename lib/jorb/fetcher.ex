@@ -1,33 +1,40 @@
 defmodule Jorb.Fetcher do
+  @moduledoc ~S"""
+  Jorb.Fetcher
+
+  Fetch a batch of messages from the given queue on a timer
+  """
   require Logger
   use GenServer
-  alias ExAws.SQS
 
   def start_link(queue_name) do
     GenServer.start_link(__MODULE__, queue_name)
   end
 
-  def poll_sqs() do
+  def poll_queue() do
     poll_timeout = Application.get_env(:jorb, :fetching_timer) || 1000
-    Process.send_after(self(), :poll_sqs, poll_timeout)
+    Process.send_after(self(), :poll_queue, poll_timeout)
   end
 
   def init(queue_name) do
-    poll_sqs()
+    Jorb.backend().setup(queue_name)
+    poll_queue()
     {:ok, queue_name}
   end
 
-  def handle_info(:poll_sqs, queue_name) do
-    poll_sqs()
+  def handle_info(:poll_queue, queue_name) do
+    poll_queue()
 
     1..Application.get_env(:jorb, :fetching_processes)
     |> Enum.each(fn _ ->
       spawn(fn ->
-        %{body: %{messages: messages}} =
-          SQS.receive_message(queue_name, max_number_of_messages: 10)
-          |> ExAws.request!()
-
-        Jorb.Broker.process_batch(messages)
+        # TODO: currently we don't do anything with this error
+        # but we should probably provide a callback or something
+        # so consumers of Jorb can like report to sentry or something
+        case Jorb.backend().pull(queue_name) do
+          {:ok, messages} -> Jorb.Broker.process_batch(messages)
+          {:error, err} -> raise err
+        end
       end)
     end)
 

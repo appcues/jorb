@@ -15,19 +15,15 @@ defmodule Jorb.Job do
     quote do
       @behaviour Jorb.Job
 
-      alias ExAws.SQS
-
       @doc ~S"""
       Queue a job to be performed later. Send the name of the enqueueing module along
       so we know which module to send the params later
       """
       @spec perform_async(Poison.Encoder.t()) :: :ok
-      @timed key: :auto
       def perform_async(payload) do
         # Include who sent the message, so we can figure out who's gotta deal with it later
-        final_payload = %{target: __MODULE__, body: payload}
-        SQS.send_message(queue_name(), Poison.encode!(final_payload)) |> ExAws.request!()
-        :ok
+        body_payload = %{target: __MODULE__, body: payload}
+        Jorb.backend().enqueue(queue_name(), body_payload)
       end
 
       def queue_name, do: raise("queue_name must be defined")

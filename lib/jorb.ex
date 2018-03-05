@@ -33,4 +33,8 @@ defmodule Jorb do
 
 
   """
+
+  def backend() do
+    Application.get_env(:jorb, :backend)
+  end
 end
