@@ -24,7 +24,7 @@ defmodule Jorb.Backend.FileTest do
   describe "pulling messages" do
     test "dequeuing retuns an array of queued messages", context do
       {:ok, message} = Jorb.Backend.File.enqueue(context[:queue], context[:message])
-      assert Jorb.Backend.File.pull(context[:queue]) == [message]
+      assert Jorb.Backend.File.pull(context[:queue]) == {:ok, [message]}
     end
   end
 
