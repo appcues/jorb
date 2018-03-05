@@ -16,7 +16,7 @@ defmodule Jorb.Backend.SQS do
     end
   end
 
-  def dequeue(queue_name) do
+  def pull(queue_name) do
     with request <- SQS.receive_message(queue_name, max_number_of_messages: 10),
          {:ok, %{body: %{messages: messages}}} <- ExAws.request(request) do
       messages

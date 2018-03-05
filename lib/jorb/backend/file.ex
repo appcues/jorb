@@ -27,7 +27,7 @@ defmodule Jorb.Backend.File do
     end
   end
 
-  def dequeue(queue_name) do
+  def pull(queue_name) do
     with dir <- queue_dir(queue_name),
          {:ok, files} <- File.ls(dir),
          message_file <- List.first(files),
