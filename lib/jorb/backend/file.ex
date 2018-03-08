@@ -35,20 +35,30 @@ defmodule Jorb.Backend.File do
   end
 
   def pull(queue_name) do
-    with dir <- queue_dir(queue_name),
-         {:ok, files} <- File.ls(dir),
-         message_file <- List.first(files),
-         message_path <- Path.join(dir, message_file),
-         {:ok, raw_message} <- File.read(message_path),
-         {:ok, message} <- Poison.decode(raw_message) do
-      out =
-        message
-        |> atomize_message_keys
-        |> List.wrap()
+    dir = queue_dir(queue_name)
 
-      {:ok, out}
-    else
-      err -> err
+    case File.ls(dir) do
+      {:ok, []} ->
+        {:ok, []}
+
+      {:ok, files} ->
+        message_file = List.first(files)
+        message_path = Path.join(dir, message_file)
+
+        with {:ok, raw_message} <- File.read(message_path),
+             {:ok, message} <- Poison.decode(raw_message) do
+          out =
+            message
+            |> atomize_message_keys
+            |> List.wrap()
+
+          {:ok, out}
+        else
+          err -> err
+        end
+
+      err ->
+        err
     end
   end
 
