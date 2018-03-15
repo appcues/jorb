@@ -24,19 +24,22 @@ defmodule Jorb.Fetcher do
 
   def handle_info(:poll_queue, queue_name) do
     poll_queue()
+    fetching_processes = Application.get_env(:jorb, :fetching_processes)
 
-    1..Application.get_env(:jorb, :fetching_processes)
-    |> Enum.each(fn _ ->
-      spawn(fn ->
-        # TODO: currently we don't do anything with this error
-        # but we should probably provide a callback or something
-        # so consumers of Jorb can like report to sentry or something
-        case Jorb.backend().pull(queue_name) do
-          {:ok, messages} -> Jorb.Broker.process_batch(messages)
-          {:error, err} -> raise err
-        end
+    if fetching_processes > 0 do
+      1..Application.get_env(:jorb, :fetching_processes)
+      |> Enum.each(fn _ ->
+        spawn(fn ->
+          # TODO: currently we don't do anything with this error
+          # but we should probably provide a callback or something
+          # so consumers of Jorb can like report to sentry or something
+          case Jorb.backend().pull(queue_name) do
+            {:ok, messages} -> Jorb.Broker.process_batch(messages)
+            {:error, err} -> raise err
+          end
+        end)
       end)
-    end)
+    end
 
     {:noreply, queue_name}
   end
