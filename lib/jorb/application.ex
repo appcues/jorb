@@ -6,7 +6,6 @@ defmodule Jorb.Application do
   use Application
 
   def start(_type, _args) do
-    import Supervisor.Spec, warn: false
     # List all child processes to be supervised
     children = fetchers_per_queue()
 
@@ -17,10 +16,12 @@ defmodule Jorb.Application do
   end
 
   def fetchers_per_queue do
+    import Supervisor.Spec, warn: false
+
     Enum.map(jobs_modules(), fn mod ->
       queue_name = apply(mod, :queue_name, [])
 
-      {Jorb.Fetcher, queue_name}
+      Supervisor.child_spec({Jorb.Fetcher, queue_name}, id: queue_name)
     end)
   end
 
