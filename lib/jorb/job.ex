@@ -23,7 +23,7 @@ defmodule Jorb.Job do
       def perform_async(payload) do
         # Include who sent the message, so we can figure out who's gotta deal with it later
         body_payload = %{target: __MODULE__, body: payload}
-        queue_name = queue_name() |> Jorb.Queue.prefixed_queue_name()
+        queue_name = queue_name()
         Jorb.backend().enqueue(queue_name(), body_payload)
         :ok
       end

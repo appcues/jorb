@@ -11,10 +11,11 @@ defmodule Jorb.Backend do
   Dequeue pulls the next message from the queue
   Finalize removes the given message from the queue
   """
+  @type queue_name :: String.t()
 
-  @callback setup(String.t()) :: :ok | no_return
-  @callback enqueue(String.t(), Map.t()) :: {:ok, Map.t()} | {:error, any}
-  @callback pull(String.t()) :: {:ok, [Map.t()]} | {:error, any}
-  @callback finalize(String.t(), Map.t()) :: :ok | {:error, any}
-  @callback purge(String.t()) :: :ok | {:error, any}
+  @callback setup(queue_name) :: :ok | no_return
+  @callback enqueue(queue_name, map()) :: {:ok, map()} | {:error, any}
+  @callback pull(queue_name) :: {:ok, [map()]} | {:error, any}
+  @callback finalize(queue_name, map()) :: :ok | {:error, any}
+  @callback purge(queue_name) :: :ok | {:error, any}
 end

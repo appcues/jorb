@@ -67,7 +67,10 @@ defmodule Jorb.Backend.File do
   end
 
   def purge(queue_name) do
-    File.rm_rf(queue_dir(queue_name))
+    case File.rm_rf(queue_dir(queue_name)) do
+      {:ok, _files} -> :ok
+      {:error, reason, _files} -> {:error, reason}
+    end
   end
 
   defp queue_dir(queue_name) do

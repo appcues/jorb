@@ -19,7 +19,7 @@ defmodule Jorb.Application do
     import Supervisor.Spec, warn: false
 
     Enum.map(jobs_modules(), fn mod ->
-      queue_name = apply(mod, :queue_name, []) |> Jorb.Queue.prefixed_queue_name()
+      queue_name = apply(mod, :queue_name, [])
 
       Supervisor.child_spec({Jorb.Fetcher, queue_name}, id: queue_name)
     end)
