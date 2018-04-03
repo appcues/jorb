@@ -27,7 +27,7 @@ defmodule Jorb.Broker do
         # the payload is a map of %{ "target" => <module name>, "body" => %{ <actual params> } }
         %{"target" => module_name, "body" => payload} = Poison.decode!(message.body)
         target = String.to_existing_atom(module_name)
-        queue_name = apply(target, :queue_name, [])
+        queue_name = apply(target, :queue_name, []) |> Jorb.Backend.prefix_queue_name()
 
         case apply(target, :perform, [payload]) do
           :error ->

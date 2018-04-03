@@ -18,4 +18,10 @@ defmodule Jorb.Backend do
   @callback pull(queue_name) :: {:ok, [map()]} | {:error, any}
   @callback finalize(queue_name, map()) :: :ok | {:error, any}
   @callback purge(queue_name) :: :ok | {:error, any}
+
+  @spec prefix_queue_name(queue_name) :: queue_name
+  def prefix_queue_name(queue_name) do
+    env = Application.get_env(:jorb, :environment) || 'dev'
+    "#{env}_#{queue_name}"
+  end
 end

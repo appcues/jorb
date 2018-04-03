@@ -38,13 +38,17 @@ config :jorb,
   application: :jorb,
   fetching_processes: 4,
   fetching_timer: 1000,
-  namespace: "Elixir.Jorb.Jobs."
+  namespace: "Elixir.Jorb.Jobs.",
+  backend: Jorb.Backend.SQS,
+  environment: 'dev'
 ```
 
 * application: this is the name of your app (the same one from `mix.exs`)
 * fetching_processes: this is how many processes are pulling from SQS simultaneously PER QUEUE
 * fetching_timer: this is how often the fetchers poll SQS
 * namespace: this is the namespace that your jobs (things `use`ing `Jorb.Job`) live in.
+* backend: this is anything that implements the [`Jorb.Backend`](https://github.com/appcues/jorb/blob/master/lib/jorb/backend.ex) protocol.
+* environment: the env that `Jorb` is running in. Needed because libraries' `Mix.env` is always `:prod`
 
 It is important that your jobs share a namespace, so that `Jorb` can automatically find out the
 names of the queues that need to be pulled from.
