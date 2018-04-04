@@ -8,8 +8,8 @@ defmodule Jorb.Backend.File do
   """
   @behaviour Jorb.Backend
   def setup(queue_name) do
-    if Application.get_env(:jorb, :fetching_processes) != 1 do
-      raise "File queueing backend is currently restricted to 1 process per queue"
+    if Application.get_env(:jorb, :fetching_processes) > 1 do
+      raise "File queueing backend is currently restricted to 1 (or 0) processes per queue"
     end
 
     unless File.exists?(queue_dir(queue_name)) do
@@ -67,7 +67,10 @@ defmodule Jorb.Backend.File do
   end
 
   def purge(queue_name) do
-    File.rm_rf(queue_dir(queue_name))
+    case File.rm_rf(queue_dir(queue_name)) do
+      {:ok, _files} -> :ok
+      {:error, reason, _files} -> {:error, reason}
+    end
   end
 
   defp queue_dir(queue_name) do
