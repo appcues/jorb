@@ -7,7 +7,7 @@ defmodule Jorb.Application do
 
   def start(_type, _args) do
     # List all child processes to be supervised
-    children = fetchers_per_queue()
+    children = fetchers()
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
@@ -15,13 +15,19 @@ defmodule Jorb.Application do
     Supervisor.start_link(children, opts)
   end
 
-  def fetchers_per_queue do
+  def fetchers do
     import Supervisor.Spec, warn: false
 
     Enum.map(jobs_modules(), fn mod ->
-      queue_name = apply(mod, :queue_name, []) |> Jorb.Backend.prefix_queue_name()
+      queues =
+        case apply(mod, :queue_name, []) do
+          queues when is_list(queues) -> queues
+          queue -> [queue]
+        end
 
-      Supervisor.child_spec({Jorb.Fetcher, queue_name}, id: queue_name)
+      fetcher_id = "#{mod}.Fetcher" |> String.to_atom()
+
+      Supervisor.child_spec({Jorb.Fetcher, queues}, id: fetcher_id)
     end)
   end
 
