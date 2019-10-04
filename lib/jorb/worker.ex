@@ -14,7 +14,7 @@ defmodule Jorb.Worker do
   @impl true
   def handle_info(:poll_queue, opts) do
     poll_queue(opts)
-    opts[:module].fetch_and_perform(opts)
+    opts[:module].work(opts)
     {:noreply, opts}
   end
 
@@ -23,10 +23,7 @@ defmodule Jorb.Worker do
   end
 
   def poll_queue(opts) do
-    poll_timeout =
-      opts[:fetch_interval] ||
-        Application.get_env(:jorb, :fetch_interval, 1000)
-
+    poll_timeout = Jorb.config(:read_interval, opts, opts[:module])
     Process.send_after(self(), :poll_queue, poll_timeout)
   end
 end

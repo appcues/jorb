@@ -114,9 +114,9 @@ defmodule Jorb.Job do
   @doc false
   @spec enqueue(atom, any) :: :ok | {:error, String.t()}
   def enqueue(module, payload) do
-    message = %{target: module, body: payload}
+    message = %{"target" => module, "body" => payload}
     queue = module.write_queue(payload)
-    Jorb.config(:backend, module).enqueue(queue, message)
+    Jorb.config(:backend, [], module).enqueue_message(queue, message, [])
   end
 
   @doc false
@@ -126,7 +126,7 @@ defmodule Jorb.Job do
     |> Enum.map(fn i ->
       %{
         id: {module, :worker, i},
-        start: {Jorb.Worker, :start_link, [{:module, module} | opts]},
+        start: {Jorb.Worker, :start_link, [[{:module, module} | opts]]},
         type: :worker,
         restart: :permanent,
         shutdown: 5000
@@ -173,12 +173,21 @@ defmodule Jorb.Job do
   defp performance_task(message, queue, opts, module) do
     backend = Jorb.config(:backend, opts, module)
 
-    job_module = message["target"] |> String.to_existing_atom()
-    body = message["body"] |> Poison.decode!()
+    job_module =
+      case message["target"] do
+        target when is_binary(target) -> String.to_existing_atom(target)
+        target -> target
+      end
+
+    body =
+      case message["body"] do
+        body when is_binary(body) -> Poison.decode!(body)
+        body -> body
+      end
 
     Task.async(fn ->
       case job_module.perform(body) do
-        :ok -> backend.delete(queue, message)
+        :ok -> backend.delete_message(queue, message, opts)
         _ -> :oh_well
       end
     end)
@@ -191,7 +200,7 @@ defmodule Jorb.Job do
   defp read_from_queues([queue | rest], opts, module) do
     backend = Jorb.config(:backend, opts, module)
 
-    case backend.pull(queue, opts) do
+    case backend.read_messages(queue, opts) do
       {:ok, []} -> read_from_queues(rest, opts, module)
       {:ok, messages} -> {:ok, messages, queue}
       error -> error

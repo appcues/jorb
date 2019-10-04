@@ -31,14 +31,15 @@ defmodule Jorb.Backend.Memory do
   end
 
   def handle_call({:enqueue_message, queue, message, _opts}, _from, state) do
-    messages = state.queues[queue] ++ [message]
+    old_messages = state.queues[queue] || []
+    messages = old_messages ++ [message]
     queues = state.queues |> Map.put(queue, messages)
     {:reply, :ok, %{state | queues: queues}}
   end
 
   def handle_call({:read_messages, queue, opts}, _from, state) do
     read_batch_size = opts[:read_batch_size] || 1
-    {batch, _} = Enum.take(state.queues[queue], read_batch_size)
+    batch = Enum.take(state.queues[queue], read_batch_size)
 
     # we don't delete from the queue here; imagine a visibility_timeout of 0
     {:reply, {:ok, batch}, state}
