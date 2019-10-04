@@ -37,15 +37,17 @@ defmodule Jorb.Job do
 
   ```
   # poll queues once
-  HelloWorld.Job.fetch_and_perform(fetch_timeout: 1000, perform_timeout: 5000)
+  HelloWorld.Job.work(fetch_timeout: 1000, perform_timeout: 5000)
 
   # poll queues forever
-  HelloWorld.Job.fetchers(count: 2, fetch_interval: 1000)
+  HelloWorld.Job.workers(count: 2, fetch_interval: 1000)
   |> Supervisor.start_link()
   ```
   """
 
   @type queue :: String.t()
+
+  @type message :: map()
 
   @doc ~S"""
   List of queues to fetch jobs from, given in highest-priority-first order.
@@ -97,15 +99,15 @@ defmodule Jorb.Job do
       `perform/1` is invoked, deleting the message if the return value
       is `:ok`.
       """
-      @spec fetch_and_perform(Keyword.t()) :: :ok | {:error, String.t()}
-      def fetch_and_perform(opts \\ []), do: Jorb.Job.fetch_and_perform(__MODULE__, opts)
+      @spec work(Keyword.t()) :: :ok | {:error, String.t()}
+      def work(opts \\ []), do: Jorb.Job.work(__MODULE__, opts)
 
       @doc ~S"""
       Returns a list of one or more child specs for GenServers that
-      execute `fetch_and_perform(opts)` forever.
+      execute `work(opts)` forever.
       """
-      @spec fetchers(Keyword.t()) :: [:supervisor.child_spec()]
-      def fetchers(opts), do: Jorb.Job.fetchers(__MODULE__, opts)
+      @spec workers(Keyword.t()) :: [:supervisor.child_spec()]
+      def workers(opts), do: Jorb.Job.workers(__MODULE__, opts)
     end
   end
 
@@ -114,16 +116,85 @@ defmodule Jorb.Job do
   def enqueue(module, payload) do
     message = %{target: module, body: payload}
     queue = module.write_queue(payload)
-    Jorb.backend().enqueue(queue, message)
+    Jorb.config(:backend, module).enqueue(queue, message)
   end
 
   @doc false
-  @spec fetch_and_perform(atom, Keyword.t()) :: :ok | {:error, String.t()}
-  def fetch_and_perform(module, opts) do
+  @spec workers(atom, Keyword.t()) :: [:supervisor.child_spec()]
+  def workers(module, opts) do
+    1..Jorb.config(:worker_count, opts, module)
+    |> Enum.map(fn i ->
+      %{
+        id: {module, :worker, i},
+        start: {Jorb.Worker, :start_link, [{:module, module} | opts]},
+        type: :worker,
+        restart: :permanent,
+        shutdown: 5000
+      }
+    end)
   end
 
   @doc false
-  @spec fetchers(atom, opts) :: [:supervisor.child_spec()]
-  def fetchers(opts) do
+  @spec work(atom, Keyword.t()) :: :ok | {:error, String.t()}
+  def work(module, opts) do
+    queues = module.read_queues()
+    duration = Jorb.config(:read_duration, opts, module)
+    interval = Jorb.config(:read_interval, opts, module)
+    batch_size = Jorb.config(:read_batch_size, opts, module)
+    read_timeout = Jorb.config(:read_timeout, opts, module)
+    perform_timeout = Jorb.config(:perform_timeout, opts, module)
+
+    read_opts = [
+      read_duration: duration,
+      read_batch_size: batch_size,
+      read_timeout: read_timeout
+    ]
+
+    case read_from_queues(queues, read_opts, module) do
+      {:ok, messages, queue} ->
+        tasks = Enum.map(messages, &performance_task(&1, queue, opts, module))
+
+        Task.yield_many(tasks, perform_timeout)
+        |> Enum.each(fn {task, result} ->
+          if result == nil, do: Task.shutdown(task)
+        end)
+
+        :ok
+
+      :none ->
+        :ok
+
+      {:error, e} ->
+        {:error, e}
+    end
+  end
+
+  # @spec performance_task(message, queue, Keyword.t(), atom) :: Task.t()
+  defp performance_task(message, queue, opts, module) do
+    backend = Jorb.config(:backend, opts, module)
+
+    job_module = message["target"] |> String.to_existing_atom()
+    body = message["body"] |> Poison.decode!()
+
+    Task.async(fn ->
+      case job_module.perform(body) do
+        :ok -> backend.delete(queue, message)
+        _ -> :oh_well
+      end
+    end)
+  end
+
+  # @spec read_from_queues([queue], Keyword.t(), atom) ::
+  #        {:ok, [message], queue} | :none | {:error, String.t()}
+  defp read_from_queues([], _opts, _module), do: :none
+
+  defp read_from_queues([queue | rest], opts, module) do
+    backend = Jorb.config(:backend, opts, module)
+
+    case backend.pull(queue, opts) do
+      {:ok, []} -> read_from_queues(rest, opts, module)
+      {:ok, messages} -> {:ok, messages, queue}
+      error -> error
+    end
   end
 end
