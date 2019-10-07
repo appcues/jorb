@@ -1,10 +1,13 @@
 defmodule Jorb.Job do
   @moduledoc ~S"""
   Modules that `use Jorb.Job` can enqueue, read, and perform jobs.
-
   These modules must implement the `Jorb.Job` behaviour.
-  In addition to their `Jorb.Job` implementation, functions `enqueue/2`, 
-  See `Jorb` for full documentation.
+
+  In addition to the callbacks defined in `Jorb.Job`, these modules also
+  export the `enqueue/2`, `work/1`, and `workers/1` functions.  See the
+  documention below for `enqueue/3`, `work/2`, and `workers/2`.
+
+  See `Jorb` for more documentation.
   """
 
   @type queue :: String.t()
@@ -52,7 +55,7 @@ defmodule Jorb.Job do
       Queue a job to be performed by this module's `perform/1` function
       later.
       """
-      @spec enqueue(any, Keyword.t) :: :ok | {:error, String.t()}
+      @spec enqueue(any, Keyword.t()) :: :ok | {:error, String.t()}
       def enqueue(payload, opts \\ []), do: Jorb.Job.enqueue(__MODULE__, payload, opts)
 
       @doc ~S"""
@@ -73,15 +76,27 @@ defmodule Jorb.Job do
     end
   end
 
-  @doc false
-  @spec enqueue(atom, any, Keyword.t) :: :ok | {:error, String.t()}
+  @doc ~S"""
+  Queue a job to be performed by this module's `perform/1` function
+  later.
+
+  Intended for use through modules that `use Jorb.Job`.
+  """
+  @spec enqueue(atom, any, Keyword.t()) :: :ok | {:error, String.t()}
   def enqueue(module, payload, opts) do
     message = %{"target" => module, "body" => payload}
     queue = module.write_queue(payload)
     Jorb.config(:backend, [], module).enqueue_message(queue, message, opts)
   end
 
-  @doc false
+  @doc ~S"""
+  Attempt to fetch jobs to do, reading from the first item in
+  `read_queues/0` that has messages.  For each message received,
+  `perform/1` is invoked, deleting the message if the return value
+  is `:ok`.
+
+  Intended for use through modules that `use Jorb.Job`.
+  """
   @spec workers(atom, Keyword.t()) :: [:supervisor.child_spec()]
   def workers(module, opts) do
     1..Jorb.config(:worker_count, opts, module)
@@ -96,7 +111,12 @@ defmodule Jorb.Job do
     end)
   end
 
-  @doc false
+  @doc ~S"""
+  Returns a list of one or more child specs for GenServers that
+  execute `work(opts)` forever.
+
+  Intended for use through modules that `use Jorb.Job`.
+  """
   @spec work(atom, Keyword.t()) :: :ok | {:error, String.t()}
   def work(module, opts) do
     queues = module.read_queues()
