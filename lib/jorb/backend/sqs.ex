@@ -51,22 +51,22 @@ defmodule Jorb.Backend.SQS do
 
     request =
       SQS.receive_message(queue,
-        receive_message_wait_time_seconds: round(read_duration / 1000),
+        wait_time_seconds: round(read_duration / 1000),
         max_number_of_messages: read_batch_size
       )
 
     request_task = Task.async(fn -> ExAws.request(request) end)
 
     case Task.yield(request_task, read_timeout) do
-      {task, nil} ->
-        Task.shutdown(task)
+      nil ->
+        Task.shutdown(request_task)
         {:error, "pull error: read timeout"}
 
-      {_task, {:ok, %{body: %{messages: messages}}}} ->
-        {:ok, messages}
+      {:exit, reason} ->
+        {:error, "pull error: #{inspect(reason)}"}
 
-      {_task, {:error, e}} ->
-        {:error, "pull error: #{inspect(e)}"}
+      {:ok, %{body: %{messages: messages}}} ->
+        {:ok, messages}
     end
   end
 
