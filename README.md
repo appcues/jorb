@@ -3,56 +3,93 @@
 [![Coach Z](http://www.hrwiki.org/w/images/3/3e/Old_homestar_jorb.PNG)](https://www.youtube.com/watch?v=8C4ayBHTES0)
 > I uh, I say you did a great _jorb_ out there
 
-Jorb is a simple Elixir library for publishing jobs to SQS and running them later
+## What
 
-## Example
+Jorb is a simple queue-based jobs processing system for Elixir.
+Works great with Amazon SQS.
 
-First, define a job module:
+## How
 
-  ```elixir
-  defmodule Demo.Jobs.TestJob do
-     use Jorb.Job
+Define your job module:
 
-     def queue_name, do: "test"
-     def perform(name) do
-       IO.puts("Hello #{name}")
-     end
+```
+defmodule HelloWorld.Job do
+  use Jorb.Job
+
+  def read_queues do
+    ["high_priority_greetings", "regular_greetings"]
   end
-  ```
 
-Then, queue jobs to be performed later with `perform_async`
+  def write_queue(greeting) do
+    if greeting["name"] == "Zeke" do
+      "high_priority_greetings"
+    else
+      "regular_greetings"
+    end
+  end
 
-```elixir
-  Demo.Jobs.TestJob.perform_async("Andy")
+  def perform(greeting) do
+    IO.puts "Hello, #{greeting["name"]}!"
+    :ok
+  end
+end
 ```
 
-## Configuring
+Enqueue work:
 
-Jorb uses [ExAws](https://github.com/ex-aws/ex_aws) under the hood to push/pull from SQS,
-so configure your AWS keys like you would for ExAws.
-
-There are a few config options that need to be set for Jorb to run correctly. Here is the default config:
-
-```elixir
-config :jorb,
-  application: :jorb,
-  fetching_processes: 4,
-  fetching_timer: 1000,
-  namespace: "Elixir.Jorb.Jobs.",
-  backend: Jorb.Backend.SQS,
-  environment: 'dev'
+```
+HelloWorld.Job.enqueue(%{"name" => "Ray"})
 ```
 
-* application: this is the name of your app (the same one from `mix.exs`)
-* fetching_processes: this is how many processes are pulling from SQS simultaneously PER QUEUE
-* fetching_timer: this is how often the fetchers poll SQS
-* namespace: this is the namespace that your jobs (things `use`ing `Jorb.Job`) live in.
-* backend: this is anything that implements the [`Jorb.Backend`](https://github.com/appcues/jorb/blob/master/lib/jorb/backend.ex) protocol.
-* environment: the env that `Jorb` is running in. Needed because libraries' `Mix.env` is always `:prod`
+Perform work:
 
-It is important that your jobs share a namespace, so that `Jorb` can automatically find out the
-names of the queues that need to be pulled from.
+```
+# poll queues once
+HelloWorld.Job.work(read_timeout: 1000, perform_timeout: 5000)
 
+# poll queues forever
+HelloWorld.Job.workers(worker_count: 2, read_interval: 1000)
+|> Supervisor.start_link(strategy: :one_for_one)
+```
+
+## Installation
+
+Put the following into your `mix.exs` file's `deps` function:
+
+    {:jorb, "~> 0.3.0"}
+
+## Configuration
+
+In order of priority, configs can be provided by:
+
+* Passing options in the `opts` parameter to each function
+* Configuring your job module in `config/config.exs`:
+
+  `config :jorb, HelloWorld.Job, [read_timeout: 5000]`
+
+* Configuring global Jorb settings in `config/config.exs`:
+
+  `config :jorb, write_batch_size: 10`
+
+Options:
+
+* `:backend` - the module implementing `Jorb.Backend`, default
+  `Jorb.Backend.Memory`. You should set this to something
+  else (like `Jorb.Backend.SQS` in production.
+* `:worker_count` - number of workers to launch per job module,
+  default `System.schedulers_online()`.
+* `:write_batch_size` - number of messages to write at once, default 1.
+* `:write_interval` - milliseconds to wait before flushing outgoing
+   messages, default 1000.
+* `:read_batch_size` - number of messages to read at once, default 1.
+* `:read_interval` - milliseconds to sleep between fetching messages,
+   default 1000.
+* `:read_duration` - milliseconds to hold connection open when polling
+  for messages, default 1000.
+* `:read_timeout` - milliseconds before giving up when reading messages,
+  default 2000.
+* `:perform_timeout` - milliseconds before giving up when performing a
+  single job, default 5000.
 
 ## Installation
 
@@ -62,19 +99,15 @@ by adding `jorb` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:jorb, "~> 0.1.0"}
+    {:jorb, "~> 0.3.0"}
   ]
 end
 ```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/jorb](https://hexdocs.pm/jorb).
 
 ## Authorship & License
 
 Jorb is copyright 2018 Appcues, Inc.
 
-Jorb is licensed under the MIT license
+Jorb is licensed under the MIT license.
 
-_A Jorb Well Done_ is by The Brothers Chaps
+_A Jorb Well Done_ is by The Brothers Chaps.

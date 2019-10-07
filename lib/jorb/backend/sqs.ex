@@ -2,39 +2,81 @@ defmodule Jorb.Backend.SQS do
   @behaviour Jorb.Backend
   alias ExAws.SQS
 
-  def setup(queue_name) do
-    SQS.create_queue(queue_name) |> ExAws.request!()
+  @impl true
+  def create_queue(queue, _opts) do
+    request = SQS.create_queue(queue)
+
+    case ExAws.request(request) do
+      {:ok, _} -> :ok
+      err -> err
+    end
   end
 
-  def enqueue(queue_name, payload) do
+  @impl true
+  def delete_queue(queue, _opts) do
+    request = SQS.delete_queue(queue)
+
+    case ExAws.request(request) do
+      {:ok, _} -> :ok
+      err -> err
+    end
+  end
+
+  @impl true
+  def purge_queue(queue, _opts) do
+    request = SQS.purge_queue(queue)
+
+    case ExAws.request(request) do
+      {:ok, _} -> :ok
+      err -> err
+    end
+  end
+
+  @impl true
+  def enqueue_message(queue, payload, _opts) do
     with {:ok, encoded} <- Poison.encode(payload),
-         message <- SQS.send_message(queue_name, encoded),
-         {:ok, _response} <- ExAws.request(message) do
-      {:ok, payload}
-    else
-      err -> err
-    end
-  end
-
-  def pull(queue_name) do
-    with request <- SQS.receive_message(queue_name, max_number_of_messages: 10),
-         {:ok, %{body: %{messages: messages}}} <- ExAws.request(request) do
-      {:ok, messages}
-    else
-      err -> err
-    end
-  end
-
-  def finalize(queue_name, message) do
-    SQS.delete_message(queue_name, message[:receipt_handle]) |> ExAws.request()
-  end
-
-  def purge(queue_name) do
-    with request <- SQS.purge_queue(queue_name),
+         request <- SQS.send_message(queue, encoded),
          {:ok, _response} <- ExAws.request(request) do
       :ok
     else
       err -> err
+    end
+  end
+
+  @impl true
+  def read_messages(queue, opts) do
+    read_batch_size = opts[:read_batch_size]
+    read_duration = opts[:read_duration]
+    read_timeout = opts[:read_timeout]
+
+    request =
+      SQS.receive_message(queue,
+        wait_time_seconds: round(read_duration / 1000),
+        max_number_of_messages: read_batch_size
+      )
+
+    request_task = Task.async(fn -> ExAws.request(request) end)
+
+    case Task.yield(request_task, read_timeout) do
+      nil ->
+        Task.shutdown(request_task)
+        {:error, "pull error: read timeout"}
+
+      {:exit, reason} ->
+        {:error, "pull error: #{inspect(reason)}"}
+
+      {:ok, %{body: %{messages: messages}}} ->
+        {:ok, messages}
+    end
+  end
+
+  @impl true
+  def delete_message(queue, message, _opts) do
+    request = SQS.delete_message(queue, message[:receipt_handle])
+
+    case ExAws.request(request) do
+      {:ok, _} -> :ok
+      error -> error
     end
   end
 end

@@ -20,6 +20,13 @@ defmodule Jorb.Mixfile do
         links: %{
           "GitHub" => "https://github.com/appcues/jorb"
         }
+      ],
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test
       ]
     ]
   end
@@ -41,7 +48,8 @@ defmodule Jorb.Mixfile do
       {:sweet_xml, "~> 0.6"},
       {:poison, "~> 1.0"},
       {:ex_doc, "~> 0.16", only: :dev, runtime: false},
-      {:dialyxir, "~> 0.5", only: [:dev], runtime: false}
+      {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
+      {:excoveralls, "~> 0.11", only: :test}
     ]
   end
 end

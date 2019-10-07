@@ -6,35 +6,117 @@ defmodule Jorb do
 
   ## What
 
-  Jorb is a simple jobs processing system for Elixir
+  Jorb is a simple queue-based jobs processing system for Elixir.
+  Works great with Amazon SQS.
 
   ## How
 
-  Modules use `Jorb.Job` and implement its' `c:queue_name/0` and `c:perform/1` callbacks
-
-  Example:
+  Define your job module:
 
   ```
-  defmodule Demo.Jobs.TestJob do
-     use Jorb.Job
+  defmodule HelloWorld.Job do
+    use Jorb.Job
 
-     def queue_name, do: "test"
-     def perform(name) do
-       IO.puts("Hello #{name}")
-     end
+    def read_queues do
+      ["high_priority_greetings", "regular_greetings"]
+    end
+
+    def write_queue(greeting) do
+      if greeting["name"] == "Zeke" do
+        "high_priority_greetings"
+      else
+        "regular_greetings"
+      end
+    end
+
+    def perform(greeting) do
+      IO.puts "Hello, #{greeting["name"]}!"
+      :ok
+    end
   end
   ```
 
-  Then, queue jobs to be performed later with `perform_async`
+  Enqueue work:
 
-  ```Demo.Jobs.TestJob.perform_async("Andy")```
+  ```
+  HelloWorld.Job.enqueue(%{"name" => "Ray"})
+  ```
 
-  And sometime later "Hello Andy" will be output to the console
+  Perform work:
 
+  ```
+  # poll queues once
+  HelloWorld.Job.work(read_timeout: 1000, perform_timeout: 5000)
+
+  # poll queues forever
+  HelloWorld.Job.workers(worker_count: 2, read_interval: 1000)
+  |> Supervisor.start_link(strategy: :one_for_one)
+  ```
+
+  ## Installation
+
+  Put the following into your `mix.exs` file's `deps` function:
+
+      {:jorb, "~> 0.3.0"}
+
+  ## Configuration
+
+  In order of priority, configs can be provided by:
+
+  * Passing options in the `opts` parameter to each function
+  * Configuring your job module in `config/config.exs`:
+
+      config :jorb, HelloWorld.Job, [read_timeout: 5000]
+
+  * Configuring global Jorb settings in `config/config.exs`:
+
+      config :jorb, write_batch_size: 10
+
+  Options:
+
+  * `:backend` - the module implementing `Jorb.Backend`, default
+    `Jorb.Backend.Memory`. You should set this to something
+    else (like `Jorb.Backend.SQS` in production.
+  * `:worker_count` - number of workers to launch per job module,
+    default `System.schedulers_online()`.
+  * `:write_batch_size` - number of messages to write at once, default 1.
+  * `:write_interval` - milliseconds to wait before flushing outgoing
+     messages, default 1000.
+  * `:read_batch_size` - number of messages to read at once, default 1.
+  * `:read_interval` - milliseconds to sleep between fetching messages,
+     default 1000.
+  * `:read_duration` - milliseconds to hold connection open when polling
+    for messages, default 1000.
+  * `:read_timeout` - milliseconds before giving up when reading messages,
+    default 2000.
+  * `:perform_timeout` - milliseconds before giving up when performing a
+    single job, default 5000.
 
   """
 
-  def backend() do
-    Application.get_env(:jorb, :backend)
+  @defaults [
+    backend: Jorb.Backend.Memory,
+    write_interval: 1000,
+    write_batch_size: 1,
+    read_duration: 0,
+    read_interval: 1000,
+    read_batch_size: 1,
+    read_timeout: 2000,
+    perform_timeout: 5000,
+
+    ## Overridden at runtime below
+    worker_count: nil
+  ]
+
+  defp default(:worker_count), do: System.schedulers_online()
+
+  defp default(param), do: @defaults[param]
+
+  @doc false
+  @spec config(atom, Keyword.t(), atom) :: any
+  def config(param, opts \\ [], module \\ :none) do
+    jorb_env = Application.get_all_env(:jorb)
+    module_env = jorb_env[module]
+    opts[param] || module_env[param] || jorb_env[param] || default(param)
   end
 end
