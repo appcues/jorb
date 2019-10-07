@@ -65,11 +65,11 @@ In order of priority, configs can be provided by:
 * Passing options in the `opts` parameter to each function
 * Configuring your job module in `config/config.exs`:
 
-    config :jorb, HelloWorld.Job, [read_timeout: 5000]
+  `config :jorb, HelloWorld.Job, [read_timeout: 5000]`
 
 * Configuring global Jorb settings in `config/config.exs`:
 
-    config :jorb, write_batch_size: 10
+  `config :jorb, write_batch_size: 10`
 
 Options:
 
