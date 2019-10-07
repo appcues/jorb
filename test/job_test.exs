@@ -34,11 +34,11 @@ defmodule Jorb.JobTest do
     assert {:ok, [_]} = @backend.read_messages("high_priority", read_batch_size: 10)
 
     {:ok, pid} =
-      Jorb.TestJob.workers(worker_count: 1)
+      Jorb.TestJob.workers(worker_count: 1, read_interval: 10)
       |> Supervisor.start_link(strategy: :one_for_one)
 
     # Wait for work to be done
-    Process.sleep(100)
+    Process.sleep(50)
 
     assert {:ok, []} = @backend.read_messages("low_priority", [])
     assert {:ok, []} = @backend.read_messages("high_priority", [])

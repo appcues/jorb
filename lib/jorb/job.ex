@@ -1,48 +1,10 @@
 defmodule Jorb.Job do
   @moduledoc ~S"""
-  `Jorb.Job` defines the mixin that you will use to create and execute jobs.
+  Modules that `use Jorb.Job` can enqueue, read, and perform jobs.
 
-  Define your job module:
-
-  ```
-  defmodule HelloWorld.Job do
-    use Jorb.Job
-
-    def read_queues do
-      ["high_priority_greetings", "regular_greetings"]
-    end
-
-    def write_queue(greeting) do
-      if greeting["name"] == "Zeke" do
-        "high_priority_greetings"
-      else
-        "regular_greetings"
-      end
-    end
-
-    def perform(greeting) do
-      IO.puts "Hello, #{greeting["name"]}!"
-      :ok
-    end
-  end
-  ```
-
-  Enqueue work:
-
-  ```
-  HelloWorld.Job.enqueue(%{"name" => "Ray"})
-  ```
-
-  Perform work:
-
-  ```
-  # poll queues once
-  HelloWorld.Job.work(fetch_timeout: 1000, perform_timeout: 5000)
-
-  # poll queues forever
-  HelloWorld.Job.workers(count: 2, fetch_interval: 1000)
-  |> Supervisor.start_link()
-  ```
+  These modules must implement the `Jorb.Job` behaviour.
+  In addition to their `Jorb.Job` implementation, functions `enqueue/2`, 
+  See `Jorb` for full documentation.
   """
 
   @type queue :: String.t()
@@ -90,8 +52,8 @@ defmodule Jorb.Job do
       Queue a job to be performed by this module's `perform/1` function
       later.
       """
-      @spec enqueue(any) :: :ok | {:error, String.t()}
-      def enqueue(payload), do: Jorb.Job.enqueue(__MODULE__, payload)
+      @spec enqueue(any, Keyword.t) :: :ok | {:error, String.t()}
+      def enqueue(payload, opts \\ []), do: Jorb.Job.enqueue(__MODULE__, payload, opts)
 
       @doc ~S"""
       Attempt to fetch jobs to do, reading from the first item in
@@ -107,16 +69,16 @@ defmodule Jorb.Job do
       execute `work(opts)` forever.
       """
       @spec workers(Keyword.t()) :: [:supervisor.child_spec()]
-      def workers(opts), do: Jorb.Job.workers(__MODULE__, opts)
+      def workers(opts \\ []), do: Jorb.Job.workers(__MODULE__, opts)
     end
   end
 
   @doc false
-  @spec enqueue(atom, any) :: :ok | {:error, String.t()}
-  def enqueue(module, payload) do
+  @spec enqueue(atom, any, Keyword.t) :: :ok | {:error, String.t()}
+  def enqueue(module, payload, opts) do
     message = %{"target" => module, "body" => payload}
     queue = module.write_queue(payload)
-    Jorb.config(:backend, [], module).enqueue_message(queue, message, [])
+    Jorb.config(:backend, [], module).enqueue_message(queue, message, opts)
   end
 
   @doc false
@@ -138,8 +100,8 @@ defmodule Jorb.Job do
   @spec work(atom, Keyword.t()) :: :ok | {:error, String.t()}
   def work(module, opts) do
     queues = module.read_queues()
+
     duration = Jorb.config(:read_duration, opts, module)
-    interval = Jorb.config(:read_interval, opts, module)
     batch_size = Jorb.config(:read_batch_size, opts, module)
     read_timeout = Jorb.config(:read_timeout, opts, module)
     perform_timeout = Jorb.config(:perform_timeout, opts, module)

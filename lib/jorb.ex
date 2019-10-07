@@ -50,8 +50,47 @@ defmodule Jorb do
 
   # poll queues forever
   HelloWorld.Job.workers(worker_count: 2, read_interval: 1000)
-  |> Supervisor.start_link()
+  |> Supervisor.start_link(strategy: :one_for_one)
   ```
+
+  ## Installation
+
+  Put the following into your `mix.exs` file's `deps` function:
+
+      {:jorb, "~> 0.3.0"}
+
+  ## Configuration
+
+  In order of priority, configs can be provided by:
+
+  * Passing options in the `opts` parameter to each function
+  * Configuring your job module in `config/config.exs`:
+
+      config :jorb, HelloWorld.Job, [read_timeout: 5000]
+
+  * Configuring global Jorb settings in `config/config.exs`:
+
+      config :jorb, write_batch_size: 10
+
+  Options:
+
+  * `:backend` - the module implementing `Jorb.Backend`, default
+    `Jorb.Backend.Memory`. You should set this to something
+    else (like `Jorb.Backend.SQS` in production.
+  * `:worker_count` - number of workers to launch per job module,
+    default `System.schedulers_online()`.
+  * `:write_batch_size` - number of messages to write at once, default 1.
+  * `:write_interval` - milliseconds to wait before flushing outgoing
+     messages, default 1000.
+  * `:read_batch_size` - number of messages to read at once, default 1.
+  * `:read_interval` - milliseconds to sleep between fetching messages,
+     default 1000.
+  * `:read_duration` - milliseconds to hold connection open when polling
+    for messages, default 1000.
+  * `:read_timeout` - milliseconds before giving up when reading messages,
+    default 2000.
+  * `:perform_timeout` - milliseconds before giving up when performing a
+    single job, default 5000.
 
   """
 
