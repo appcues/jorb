@@ -90,10 +90,8 @@ defmodule Jorb.Job do
   end
 
   @doc ~S"""
-  Attempt to fetch jobs to do, reading from the first item in
-  `read_queues/0` that has messages.  For each message received,
-  `perform/1` is invoked, deleting the message if the return value
-  is `:ok`.
+  Returns a list of one or more child specs for GenServers that
+  execute `work(opts)` forever.
 
   Intended for use through modules that `use Jorb.Job`.
   """
@@ -112,8 +110,10 @@ defmodule Jorb.Job do
   end
 
   @doc ~S"""
-  Returns a list of one or more child specs for GenServers that
-  execute `work(opts)` forever.
+  Attempt to fetch jobs to do, reading from the first item in
+  `read_queues/0` that has messages.  For each message received,
+  `perform/1` is invoked, deleting the message if the return value
+  is `:ok`.
 
   Intended for use through modules that `use Jorb.Job`.
   """
