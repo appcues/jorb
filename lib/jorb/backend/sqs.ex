@@ -35,7 +35,9 @@ defmodule Jorb.Backend.SQS do
   @impl true
   def enqueue_message(queue, payload, _opts) do
     with {:ok, encoded} <- Poison.encode(payload),
-         request <- SQS.send_message(queue, encoded),
+         request <- SQS.get_queue_url(queue),
+         {:ok, %{body: %{queue_url: queue_url}}} <- ExAws.request(request),
+         request <- SQS.send_message(queue_url, encoded, queue_name: queue, queue_url: queue_url),
          {:ok, _response} <- ExAws.request(request) do
       :ok
     else
@@ -49,24 +51,31 @@ defmodule Jorb.Backend.SQS do
     read_duration = opts[:read_duration]
     read_timeout = opts[:read_timeout]
 
-    request =
-      SQS.receive_message(queue,
-        wait_time_seconds: round(read_duration / 1000),
-        max_number_of_messages: read_batch_size
-      )
+    with request <- SQS.get_queue_url(queue),
+         {:ok, %{body: %{queue_url: queue_url}}} <- ExAws.request(request),
+         request <-
+           SQS.receive_message(queue,
+             queue_name: queue,
+             queue_url: queue_url,
+             wait_time_seconds: round(read_duration / 1000),
+             max_number_of_messages: read_batch_size
+           ) do
+      request_task = Task.async(fn -> ExAws.request(request) end)
 
-    request_task = Task.async(fn -> ExAws.request(request) end)
+      case Task.yield(request_task, read_timeout) do
+        nil ->
+          Task.shutdown(request_task)
+          {:error, "pull error: read timeout"}
 
-    case Task.yield(request_task, read_timeout) do
-      nil ->
-        Task.shutdown(request_task)
-        {:error, "pull error: read timeout"}
+        {:exit, reason} ->
+          {:error, "pull error: #{inspect(reason)}"}
 
-      {:exit, reason} ->
-        {:error, "pull error: #{inspect(reason)}"}
+        {:ok, {:error, e}} ->
+          {:error, inspect(e)}
 
-      {:ok, %{body: %{messages: messages}}} ->
-        {:ok, messages}
+        {:ok, {:ok, %{body: %{messages: messages}}}} ->
+          {:ok, messages}
+      end
     end
   end
 
