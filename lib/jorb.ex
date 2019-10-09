@@ -79,6 +79,7 @@ defmodule Jorb do
     else (like `Jorb.Backend.SQS` in production.
   * `:worker_count` - number of workers to launch per job module,
     default `System.schedulers_online()`.
+  * `:writer_count` - number of message batch writers to launch, default 1.
   * `:write_batch_size` - number of messages to write at once, default 1.
   * `:write_interval` - milliseconds to wait before flushing outgoing
      messages, default 1000.
@@ -96,6 +97,7 @@ defmodule Jorb do
 
   @defaults [
     backend: Jorb.Backend.Memory,
+    writer_count: 1,
     write_interval: 1000,
     write_batch_size: 1,
     read_duration: 0,
