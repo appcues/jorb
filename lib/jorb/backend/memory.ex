@@ -30,10 +30,9 @@ defmodule Jorb.Backend.Memory do
     {:reply, :ok, %{state | queues: queues}}
   end
 
-  def handle_call({:enqueue_message, queue, message, _opts}, _from, state) do
+  def handle_call({:write_messages, queue, messages, _opts}, _from, state) do
     old_messages = state.queues[queue] || []
-    messages = old_messages ++ [message]
-    queues = state.queues |> Map.put(queue, messages)
+    queues = state.queues |> Map.put(queue, old_messages ++ messages)
     {:reply, :ok, %{state | queues: queues}}
   end
 
@@ -69,8 +68,8 @@ defmodule Jorb.Backend.Memory do
   end
 
   @impl Jorb.Backend
-  def enqueue_message(queue, message, opts) do
-    GenServer.call(__MODULE__, {:enqueue_message, queue, message, opts})
+  def write_messages(queue, messages, opts) do
+    GenServer.call(__MODULE__, {:write_messages, queue, messages, opts})
   end
 
   @impl Jorb.Backend

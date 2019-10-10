@@ -12,8 +12,8 @@ defmodule Jorb.Backend.SQSTest do
       read_batch_size: 1
     ]
 
-    assert :ok = SQS.create_queue(queue, queue_name: queue, visibility_timeout: 10)
-    assert :ok = SQS.enqueue_message(queue, message, [])
+    assert :ok = SQS.create_queue(queue, visibility_timeout: 10)
+    assert :ok = SQS.write_messages(queue, [message], [])
     assert {:ok, [%{body: message}]} = SQS.read_messages(queue, read_opts)
 
     # test visibility_timeout

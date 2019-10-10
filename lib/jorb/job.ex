@@ -86,7 +86,7 @@ defmodule Jorb.Job do
   def enqueue(module, payload, opts) do
     message = %{"target" => module, "body" => payload}
     queue = module.write_queue(payload)
-    Jorb.config(:backend, [], module).enqueue_message(queue, message, opts)
+    Jorb.Writer.enqueue(queue, message, opts, module)
   end
 
   @doc ~S"""

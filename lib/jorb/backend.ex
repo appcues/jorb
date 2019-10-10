@@ -13,7 +13,7 @@ defmodule Jorb.Backend do
   @callback create_queue(queue, opts) :: :ok | {:error, any}
   @callback delete_queue(queue, opts) :: :ok | {:error, any}
   @callback purge_queue(queue, opts) :: :ok | {:error, any}
-  @callback enqueue_message(queue, message, opts) :: :ok | {:error, any}
+  @callback write_messages(queue, [message], opts) :: :ok | {:error, any}
   @callback read_messages(queue, opts) :: {:ok, [message]} | {:error, any}
   @callback delete_message(queue, message, opts) :: :ok | {:error, any}
 

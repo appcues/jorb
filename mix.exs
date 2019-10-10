@@ -43,7 +43,7 @@ defmodule Jorb.Mixfile do
   defp deps do
     [
       {:ex_aws, "~> 2.0"},
-      {:ex_aws_sqs, "~> 2.0"},
+      {:ex_aws_sqs, "~> 3.0"},
       {:hackney, "~> 1.9"},
       {:sweet_xml, "~> 0.6"},
       {:poison, "~> 1.0"},
