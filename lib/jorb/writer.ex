@@ -78,7 +78,7 @@ defmodule Jorb.Writer do
       [] ->
         :ok
 
-      [batch] ->
+      [{_batch_key, batch}] ->
         with :ok <- backend.write_messages(queue, batch, opts),
              true <- :ets.delete(@table, batch_key) do
           :ok
