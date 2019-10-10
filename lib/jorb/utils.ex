@@ -1,8 +1,7 @@
 defmodule Jorb.Utils do
   @moduledoc false
 
-  @doc false
-  def now, do: :erlang.monotonic_time(:millisecond)
+  defp now, do: :erlang.monotonic_time(:millisecond)
 
   @doc ~S"""
   Locks a key in ETS and invokes `fun` on the `{key, value}` tuples for
@@ -11,7 +10,7 @@ defmodule Jorb.Utils do
   If the key is already locked, this function spins until the lock is
   released or timeout is reached.
   """
-  @spec with_ets_lock(:ets.tab(), any, ([any] -> any), non_neg_integer | :infinity) ::
+  @spec with_ets_lock(:ets.tab(), any, ([{any, any}] -> any), non_neg_integer | :infinity) ::
           :ok | :timeout
   def with_ets_lock(table, key, fun, timeout \\ 5000) do
     lock_key = {:lock, key}

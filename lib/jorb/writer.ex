@@ -6,6 +6,8 @@ defmodule Jorb.Writer do
 
   @type batch_key :: {Jorb.queue(), atom, non_neg_integer}
 
+  def start_link(opts), do: GenServer.start_link(__MODULE__, opts)
+
   @impl GenServer
   def init(opts) do
     state = %{
@@ -19,13 +21,11 @@ defmodule Jorb.Writer do
   end
 
   @impl GenServer
-  def handle_call(:flush, _from, state) do
+  def handle_info(:flush, state) do
     flush_batch(state.batch_key, state.opts)
     Process.send_after(self(), :flush, state.write_interval)
-    {:reply, :ok, state}
+    {:noreply, state}
   end
-
-  def start_link(opts), do: GenServer.start_link(__MODULE__, opts)
 
   @table Jorb.Writer.Batches
 
