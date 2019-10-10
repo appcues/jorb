@@ -9,6 +9,7 @@ defmodule Jorb.Application do
     :ets.new(Jorb.Writer.Batches, [
       :set,
       :named_table,
+      :public,
       {:write_concurrency, true},
       {:read_concurrency, true}
     ])
@@ -16,6 +17,7 @@ defmodule Jorb.Application do
     :ets.new(Jorb.Backend.SQS.QueueUrls, [
       :set,
       :named_table,
+      :public,
       {:write_concurrency, true},
       {:read_concurrency, true}
     ])
@@ -23,6 +25,7 @@ defmodule Jorb.Application do
     children = [
       %{id: Jorb.Backend.Memory, start: {Jorb.Backend.Memory, :start_link, []}}
     ]
+
     opts = [strategy: :one_for_one, name: Jorb.Supervisor]
     Supervisor.start_link(children, opts)
   end

@@ -10,17 +10,20 @@ defmodule Jorb.Backend.SQS do
       {:ok, %{body: %{queue_url: queue_url}}} ->
         put_queue_url(queue, queue_url)
         :ok
-      err -> err
+
+      err ->
+        err
     end
   end
 
   defp get_queue_url(queue) do
     case :ets.lookup(Jorb.Backend.SQS.QueueUrls, queue) do
-      [queue_url] ->
+      [{_queue, queue_url}] ->
         {:ok, queue_url}
 
       [] ->
         request = SQS.get_queue_url(queue)
+
         with {:ok, %{body: %{queue_url: queue_url}}} <- ExAws.request(request) do
           put_queue_url(queue, queue_url)
           {:ok, queue_url}
@@ -71,6 +74,7 @@ defmodule Jorb.Backend.SQS do
         message_body: body,
         message_attributes: []
       ]
+
       encode_messages(rest, [encoded_message | encoded])
     end
   end

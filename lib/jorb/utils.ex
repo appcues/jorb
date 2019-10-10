@@ -5,7 +5,9 @@ defmodule Jorb.Utils do
   def now, do: :erlang.monotonic_time(:millisecond)
 
   @doc ~S"""
-  Locks a key in ETS and invokes `fun` on the values for that key.
+  Locks a key in ETS and invokes `fun` on the `{key, value}` tuples for
+  that key.
+
   If the key is already locked, this function spins until the lock is
   released or timeout is reached.
   """
@@ -21,7 +23,7 @@ defmodule Jorb.Utils do
         :ets.delete(table, lock_key)
         :ok
 
-      [time] ->
+      [{_lock_key, time}] ->
         time_since_lock = now() - time
 
         cond do

@@ -17,9 +17,9 @@ defmodule Jorb.Backend.SQSTest do
     assert {:ok, [%{body: message}]} = SQS.read_messages(queue, read_opts)
 
     # test visibility_timeout
-    #assert :none = SQS.read_messages(queue, read_opts)
-    #Process.sleep(1000)
-    #assert {:ok, [%{body: message}]} = SQS.read_messages(queue, read_opts)
+    # assert :none = SQS.read_messages(queue, read_opts)
+    # Process.sleep(1000)
+    # assert {:ok, [%{body: message}]} = SQS.read_messages(queue, read_opts)
 
     assert :ok = SQS.purge_queue(queue, [])
     assert :none = SQS.read_messages(queue, read_opts)

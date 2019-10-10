@@ -4,7 +4,7 @@ defmodule Jorb.Writer do
   use GenServer
   import Jorb.Utils
 
-  @type batch_key :: {Jorb.queue, atom, non_neg_integer}
+  @type batch_key :: {Jorb.queue(), atom, non_neg_integer}
 
   @impl GenServer
   def init(opts) do
@@ -13,6 +13,7 @@ defmodule Jorb.Writer do
       batch_key: opts.batch_key,
       opts: opts
     }
+
     Process.send_after(self(), :flush, state.write_interval)
     {:ok, state}
   end
@@ -51,7 +52,7 @@ defmodule Jorb.Writer do
           :ets.insert(@table, {batch_key, [message]})
           :ok
 
-        [old_batch] ->
+        [{_batch_key, old_batch}] ->
           batch = [message | old_batch]
 
           if Enum.count(batch) < write_batch_size do
@@ -90,13 +91,13 @@ defmodule Jorb.Writer do
   messages. If :writer_count is set above 1, get_batch_key cycles
   through batches round-robin.
   """
-  @spec get_batch_key(Jorb.queue, Keyword.t, atom) :: batch_key
+  @spec get_batch_key(Jorb.queue(), Keyword.t(), atom) :: batch_key
   def get_batch_key(queue, opts, module) do
     counter_key = {queue, module, :counter}
 
     counter =
       case :ets.lookup(@table, counter_key) do
-        [c] ->
+        [{_counter_key, c}] ->
           c
 
         [] ->
