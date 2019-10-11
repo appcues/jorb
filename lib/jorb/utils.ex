@@ -25,14 +25,14 @@ defmodule Jorb.Utils do
 
     case :ets.lookup(table, lock_key) do
       [] ->
-        :ets.insert(table, {lock_key, now})
+        :ets.insert(table, {lock_key, until})
         :ets.lookup(table, key) |> fun.()
         :ets.delete(table, lock_key)
         :ok
 
       [{_lock_key, time}] ->
         cond do
-          until == :infinity || now < until ->
+          until == :infinity || now < time ->
             Process.sleep(@spin_delay)
             with_ets_lock_until(table, key, fun, until)
 
