@@ -15,7 +15,7 @@ install:
 - mix local.hex --force
 - mix deps.get
 before_script:
-- travis_wait mix dialyzer --plt
+  #- travis_wait mix dialyzer --plt
 - pip install --user --upgrade awscli
 - export PATH=$PATH:$HOME/.local/bin
 - export AWS_DEFAULT_REGION=us-west-2
