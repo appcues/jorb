@@ -20,7 +20,7 @@ defmodule Jorb.UtilsTest do
       end)
     end)
 
-    Process.sleep(100)
+    Process.sleep(1000)
 
     with_ets_lock(table, :key, fn
       [{:key, item}] -> assert :yup = item
