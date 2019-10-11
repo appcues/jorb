@@ -7,7 +7,7 @@ branches:
   only:
     - master
 otp_release:
-- '21.3'
+- '22.1'
 services:
 - docker
 install:
