@@ -68,8 +68,9 @@ defmodule Jorb.Job do
       def work(opts \\ []), do: Jorb.Job.work(__MODULE__, opts)
 
       @doc ~S"""
-      Returns a list of one or more child specs for GenServers that
-      execute `work(opts)` forever.
+      Returns a list of child specs for GenServers that read (
+      execute `work(opts)` forever) and write (flush batches of outgoing
+      messages).
       """
       @spec workers(Keyword.t()) :: [:supervisor.child_spec()]
       def workers(opts \\ []), do: Jorb.Job.workers(__MODULE__, opts)
@@ -90,23 +91,57 @@ defmodule Jorb.Job do
   end
 
   @doc ~S"""
-  Returns a list of one or more child specs for GenServers that
-  execute `work(opts)` forever.
+  Returns a list of child specs for GenServers that read (
+  execute `work(opts)` forever) and write (flush batches of outgoing
+  messages).
 
   Intended for use through modules that `use Jorb.Job`.
   """
   @spec workers(atom, Keyword.t()) :: [:supervisor.child_spec()]
   def workers(module, opts) do
-    1..Jorb.config(:worker_count, opts, module)
-    |> Enum.map(fn i ->
-      %{
-        id: {module, :worker, i},
-        start: {Jorb.Worker, :start_link, [[{:module, module} | opts]]},
-        type: :worker,
-        restart: :permanent,
-        shutdown: 5000
-      }
-    end)
+    reader_count = Jorb.config(:reader_count, opts, module)
+    writer_count = Jorb.config(:writer_count, opts, module)
+    write_queues = Jorb.config(:write_queues, opts, module) || []
+
+    readers =
+      case reader_count do
+        0 ->
+          []
+
+        _ ->
+          for i <- 1..reader_count do
+            %{
+              id: {module, Jorb.Reader, i},
+              start: {Jorb.Reader, :start_link, [[{:module, module} | opts]]},
+              type: :worker,
+              restart: :permanent,
+              shutdown: 5000
+            }
+          end
+      end
+
+    writers =
+      case writer_count do
+        0 ->
+          []
+
+        _ ->
+          for i <- 1..writer_count,
+              queue <- write_queues do
+            batch_key = {queue, module, i}
+            opts = [{:batch_key, batch_key}, {:queue, queue}, {:module, module} | opts]
+
+            %{
+              id: {module, Jorb.Writer, queue, i},
+              start: {Jorb.Writer, :start_link, [opts]},
+              type: :worker,
+              restart: :permanent,
+              shutdown: 5000
+            }
+          end
+      end
+
+    readers ++ writers
   end
 
   @doc ~S"""

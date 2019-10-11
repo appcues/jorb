@@ -1,8 +1,6 @@
-defmodule Jorb.Worker do
-  @moduledoc ~S"""
-  Read from queues and perform jobs.
-  """
-  require Logger
+defmodule Jorb.Reader do
+  @moduledoc false
+
   use GenServer
 
   @impl true

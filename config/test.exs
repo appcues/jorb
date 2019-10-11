@@ -1,8 +1,13 @@
 use Mix.Config
 
-config :jorb, Jorb.Backend.MemoryJob, backend: Jorb.Backend.Memory
+config :jorb, Jorb.TestJob,
+  read_batch_size: 10,
+  write_batch_size: 1
 
-config :jorb, Jorb.Backend.SQSJob, backend: Jorb.Backend.SQS
+config :jorb, Jorb.WriterTestJob,
+  write_batch_size: 4,
+  write_interval: 1,
+  write_queues: ["q"]
 
 config :ex_aws, :sqs,
   access_key_id: "foo",

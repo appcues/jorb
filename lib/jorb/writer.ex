@@ -12,11 +12,12 @@ defmodule Jorb.Writer do
   def init(opts) do
     state = %{
       write_interval: Jorb.config(:write_interval, opts),
-      batch_key: opts.batch_key,
+      batch_key: opts[:batch_key],
       opts: opts
     }
 
     Process.send_after(self(), :flush, state.write_interval)
+
     {:ok, state}
   end
 
@@ -101,7 +102,7 @@ defmodule Jorb.Writer do
           c
 
         [] ->
-          c = :counters.new(1, 1)
+          c = :counters.new(1, [:atomics])
           :ets.insert(@table, {counter_key, c})
           c
       end
@@ -110,6 +111,6 @@ defmodule Jorb.Writer do
     :counters.add(counter, 1, 1)
 
     writer_count = Jorb.config(:writer_count, opts, module)
-    {queue, module, rem(counter_value, writer_count)}
+    {queue, module, 1 + rem(counter_value, writer_count)}
   end
 end

@@ -15,7 +15,7 @@ defmodule Jorb.Backend.SQSTest do
     assert :ok = SQS.create_queue(queue, visibility_timeout: 1)
     assert :ok = SQS.write_messages(queue, [message], [])
     wait()
-    assert {:ok, [%{body: message}]} = SQS.read_messages(queue, read_opts)
+    assert {:ok, [%{body: _}]} = SQS.read_messages(queue, read_opts)
 
     # test purge
     assert :ok = SQS.purge_queue(queue, [])
@@ -23,16 +23,21 @@ defmodule Jorb.Backend.SQSTest do
     assert {:ok, []} = SQS.read_messages(queue, read_opts)
 
     # test visibility_timeout
-    assert :ok = SQS.write_messages(queue, [message], visibility_timeout: 1)
+    assert :ok = SQS.write_messages(queue, [message], [])
     wait()
-    assert {:ok, [%{body: message}]} = SQS.read_messages(queue, read_opts)
+    assert {:ok, [%{body: _}]} = SQS.read_messages(queue, read_opts)
     wait()
     assert {:ok, []} = SQS.read_messages(queue, read_opts)
-    Process.sleep(31000)
-    assert {:ok, [%{body: message}]} = SQS.read_messages(queue, read_opts)
+    Process.sleep(2000)
+    assert {:ok, [%{body: _} = message]} = SQS.read_messages(queue, read_opts)
+
+    # test delete_message
+    assert :ok = SQS.delete_message(queue, message, [])
+    wait()
+    assert {:ok, []} = SQS.read_messages(queue, read_opts)
 
     assert :ok = SQS.delete_queue(queue, [])
   end
 
-  defp wait, do: Process.sleep(50)
+  defp wait, do: Process.sleep(100)
 end

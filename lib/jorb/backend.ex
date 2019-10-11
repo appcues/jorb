@@ -1,10 +1,6 @@
 defmodule Jorb.Backend do
   @moduledoc ~S"""
-  The backend behavior represents a queueing abstraction.
-
-  Enqueue pushes a message on to the queue
-  Dequeue pulls the next message from the queue
-  Finalize removes the given message from the queue
+  The `Jorb.Backend` behaviour represents a queueing abstraction.
   """
   @type queue :: String.t()
   @type message :: map
@@ -16,6 +12,4 @@ defmodule Jorb.Backend do
   @callback write_messages(queue, [message], opts) :: :ok | {:error, any}
   @callback read_messages(queue, opts) :: {:ok, [message]} | {:error, any}
   @callback delete_message(queue, message, opts) :: :ok | {:error, any}
-
-  @optional_callbacks [create_queue: 2, delete_queue: 2, purge_queue: 2]
 end

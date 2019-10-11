@@ -3,8 +3,8 @@ defmodule Jorb.Backend.SQS do
   alias ExAws.SQS
 
   @impl true
-  def create_queue(queue, _opts) do
-    request = SQS.create_queue(queue)
+  def create_queue(queue, opts) do
+    request = SQS.create_queue(queue, opts)
 
     case ExAws.request(request) do
       {:ok, %{body: %{queue_url: queue_url}}} ->
@@ -29,7 +29,6 @@ defmodule Jorb.Backend.SQS do
           {:ok, queue_url}
         end
     end
-    |> IO.inspect
   end
 
   defp put_queue_url(queue, queue_url) do
@@ -76,7 +75,7 @@ defmodule Jorb.Backend.SQS do
       encoded_message = [
         id: id,
         message_body: body,
-        message_attributes: [],
+        message_attributes: []
       ]
 
       encode_messages(rest, [encoded_message | encoded])
@@ -91,9 +90,7 @@ defmodule Jorb.Backend.SQS do
 
     with {:ok, queue_url} <- get_queue_url(queue),
          request <-
-           SQS.receive_message(queue,
-             queue_name: queue,
-             queue_url: queue_url,
+           SQS.receive_message(queue_url,
              wait_time_seconds: round(read_duration / 1000),
              max_number_of_messages: read_batch_size
            ) do
