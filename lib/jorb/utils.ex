@@ -1,7 +1,9 @@
 defmodule Jorb.Utils do
   @moduledoc false
 
-  defp now, do: :erlang.monotonic_time(:millisecond)
+  @spin_delay 2
+
+  defp now, do: :erlang.system_time(:millisecond)
 
   @doc ~S"""
   Locks a key in ETS and invokes `fun` on the `{key, value}` tuples for
@@ -12,33 +14,27 @@ defmodule Jorb.Utils do
   """
   @spec with_ets_lock(:ets.tab(), any, ([{any, any}] -> any), non_neg_integer | :infinity) ::
           :ok | :timeout
-  def with_ets_lock(table, key, fun, timeout \\ 5000, name \\ :none) do
+  def with_ets_lock(table, key, fun, timeout \\ 5000) do
+    until = if timeout == :infinity, do: :infinity, else: now() + timeout
+    with_ets_lock_until(table, key, fun, until)
+  end
+
+  defp with_ets_lock_until(table, key, fun, until) do
     lock_key = {:lock, key}
+    now = now()
 
     case :ets.lookup(table, lock_key) do
       [] ->
-        :ets.insert(table, {lock_key, now()})
+        :ets.insert(table, {lock_key, now})
         :ets.lookup(table, key) |> fun.()
         :ets.delete(table, lock_key)
         :ok
 
       [{_lock_key, time}] ->
-        IO.inspect("spinning", label: name)
-
-        time_since_lock =
-          (now() - time)
-          |> IO.inspect(label: "#{name} time since lock")
-
         cond do
-          timeout == :infinity ->
-            with_ets_lock(table, key, fun, timeout, name)
-
-          now() < time + timeout ->
-            new_timeout =
-              (timeout - time_since_lock)
-              |> IO.inspect(label: "#{name} new timeout")
-
-            with_ets_lock(table, key, fun, new_timeout, name)
+          until == :infinity || now < until ->
+            Process.sleep(@spin_delay)
+            with_ets_lock_until(table, key, fun, until)
 
           :else ->
             :ets.delete(table, lock_key)
