@@ -29,6 +29,7 @@ defmodule Jorb.Backend.SQS do
           {:ok, queue_url}
         end
     end
+    |> IO.inspect
   end
 
   defp put_queue_url(queue, queue_url) do
@@ -69,10 +70,13 @@ defmodule Jorb.Backend.SQS do
 
   defp encode_messages([message | rest], encoded) do
     with {:ok, body} <- Poison.encode(message) do
+      id = UUID.uuid4()
+
       ## we need to encode this as a keyword list -- the ExAws.SQS docs lie
       encoded_message = [
+        id: id,
         message_body: body,
-        message_attributes: []
+        message_attributes: [],
       ]
 
       encode_messages(rest, [encoded_message | encoded])
