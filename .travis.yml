@@ -23,9 +23,7 @@ before_script:
 script:
   - mix compile
     #  - MIX_ENV=dev mix dialyzer --halt-exit-status
-  - mix ecto.create
-  - mix ecto.migrate
-  - mix fformat --check-formatted
+  - mix format --check-formatted
   - mix test
   - mix coveralls.travis --pro
 cache:
