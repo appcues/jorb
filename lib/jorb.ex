@@ -57,7 +57,7 @@ defmodule Jorb do
 
   Put the following into your `mix.exs` file's `deps` function:
 
-      {:jorb, "~> 0.3.0"}
+      {:jorb, "~> 0.4.0"}
 
   ## Configuration
 

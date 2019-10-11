@@ -56,7 +56,7 @@ HelloWorld.Job.workers(worker_count: 2, read_interval: 1000)
 
 Put the following into your `mix.exs` file's `deps` function:
 
-    {:jorb, "~> 0.3.0"}
+    {:jorb, "~> 0.4.0"}
 
 ## Configuration
 
@@ -76,8 +76,9 @@ Options:
 * `:backend` - the module implementing `Jorb.Backend`, default
   `Jorb.Backend.Memory`. You should set this to something
   else (like `Jorb.Backend.SQS` in production.
-* `:worker_count` - number of workers to launch per job module,
+* `:reader_count` - number of read workers to launch per job module,
   default `System.schedulers_online()`.
+* `:writer_count` - number of message batch writers to launch, default 1.
 * `:write_batch_size` - number of messages to write at once, default 1.
 * `:write_interval` - milliseconds to wait before flushing outgoing
    messages, default 1000.
