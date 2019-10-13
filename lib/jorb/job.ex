@@ -10,26 +10,22 @@ defmodule Jorb.Job do
   See `Jorb` for more documentation.
   """
 
-  @type queue :: String.t()
-
-  @type message :: map()
-
   @doc ~S"""
   List of queues to fetch jobs from, given in highest-priority-first order.
   """
-  @callback read_queues :: [queue]
+  @callback read_queues :: [Jorb.queue]
 
   @doc ~S"""
   Queue to write to, for the given payload.
   Implement this or `c:write_queue/0`.
   """
-  @callback write_queue(any) :: queue
+  @callback write_queue(any) :: Jorb.queue
 
   @doc ~S"""
   Queue to write to.
   Implement this or `c:write_queue/1`.
   """
-  @callback write_queue :: queue
+  @callback write_queue :: Jorb.queue
 
   @doc ~S"""
   Performs the given work.  Behind the scenes, the message from which the
@@ -210,8 +206,8 @@ defmodule Jorb.Job do
     end)
   end
 
-  # @spec read_from_queues([queue], Keyword.t(), atom) ::
-  #        {:ok, [message], queue} | :none | {:error, String.t()}
+  # @spec read_from_queues([Jorb.queue], Keyword.t(), atom) ::
+  #        {:ok, [Jorb.message], Jorb.queue} | :none | {:error, String.t()}
   defp read_from_queues([], _opts, _module), do: :none
 
   defp read_from_queues([queue | rest], opts, module) do

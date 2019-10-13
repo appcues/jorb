@@ -96,6 +96,10 @@ defmodule Jorb do
 
   """
 
+  @type queue :: String.t()
+
+  @type message :: map()
+
   @defaults [
     backend: Jorb.Backend.Memory,
     writer_count: 1,
