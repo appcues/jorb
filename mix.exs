@@ -49,7 +49,7 @@ defmodule Jorb.Mixfile do
       {:poison, "~> 1.0"},
       {:uuid, "~> 1.1"},
       {:ex_doc, "~> 0.16", only: :dev, runtime: false},
-      {:dialyxir, "~> 0.5", only: [:dev,:test], runtime: false},
+      {:dialyxir, "~> 0.5", only: [:dev, :test], runtime: false},
       {:excoveralls, "~> 0.11", only: :test}
     ]
   end

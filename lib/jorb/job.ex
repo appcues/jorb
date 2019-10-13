@@ -13,19 +13,19 @@ defmodule Jorb.Job do
   @doc ~S"""
   List of queues to fetch jobs from, given in highest-priority-first order.
   """
-  @callback read_queues :: [Jorb.queue]
+  @callback read_queues :: [Jorb.queue()]
 
   @doc ~S"""
   Queue to write to, for the given payload.
   Implement this or `c:write_queue/0`.
   """
-  @callback write_queue(any) :: Jorb.queue
+  @callback write_queue(any) :: Jorb.queue()
 
   @doc ~S"""
   Queue to write to.
   Implement this or `c:write_queue/1`.
   """
-  @callback write_queue :: Jorb.queue
+  @callback write_queue :: Jorb.queue()
 
   @doc ~S"""
   Performs the given work.  Behind the scenes, the message from which the
