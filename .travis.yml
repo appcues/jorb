@@ -15,17 +15,17 @@ install:
 - mix local.hex --force
 - mix deps.get
 before_script:
-  #- travis_wait mix dialyzer --plt
+- travis_wait mix dialyzer --plt
 - pip install --user --upgrade awscli
 - export PATH=$PATH:$HOME/.local/bin
 - export AWS_DEFAULT_REGION=us-west-2
 - docker-compose up -d
 script:
   - mix compile
-    #  - MIX_ENV=dev mix dialyzer --halt-exit-status
+  - MIX_ENV=dev mix dialyzer --halt-exit-status
   - mix format --check-formatted
   - mix test
-  - mix coveralls.travis --pro
+  - mix coveralls.travis --pro || echo "no coveralls here"
 cache:
   directories:
   - _build
