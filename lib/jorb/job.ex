@@ -10,26 +10,22 @@ defmodule Jorb.Job do
   See `Jorb` for more documentation.
   """
 
-  @type queue :: String.t()
-
-  @type message :: map()
-
   @doc ~S"""
   List of queues to fetch jobs from, given in highest-priority-first order.
   """
-  @callback read_queues :: [queue]
+  @callback read_queues :: [Jorb.queue()]
 
   @doc ~S"""
   Queue to write to, for the given payload.
   Implement this or `c:write_queue/0`.
   """
-  @callback write_queue(any) :: queue
+  @callback write_queue(any) :: Jorb.queue()
 
   @doc ~S"""
   Queue to write to.
   Implement this or `c:write_queue/1`.
   """
-  @callback write_queue :: queue
+  @callback write_queue :: Jorb.queue()
 
   @doc ~S"""
   Performs the given work.  Behind the scenes, the message from which the
@@ -68,8 +64,9 @@ defmodule Jorb.Job do
       def work(opts \\ []), do: Jorb.Job.work(__MODULE__, opts)
 
       @doc ~S"""
-      Returns a list of one or more child specs for GenServers that
-      execute `work(opts)` forever.
+      Returns a list of child specs for GenServers that read (
+      execute `work(opts)` forever) and write (flush batches of outgoing
+      messages).
       """
       @spec workers(Keyword.t()) :: [:supervisor.child_spec()]
       def workers(opts \\ []), do: Jorb.Job.workers(__MODULE__, opts)
@@ -86,27 +83,61 @@ defmodule Jorb.Job do
   def enqueue(module, payload, opts) do
     message = %{"target" => module, "body" => payload}
     queue = module.write_queue(payload)
-    Jorb.config(:backend, [], module).enqueue_message(queue, message, opts)
+    Jorb.Writer.enqueue(queue, message, opts, module)
   end
 
   @doc ~S"""
-  Returns a list of one or more child specs for GenServers that
-  execute `work(opts)` forever.
+  Returns a list of child specs for GenServers that read (
+  execute `work(opts)` forever) and write (flush batches of outgoing
+  messages).
 
   Intended for use through modules that `use Jorb.Job`.
   """
   @spec workers(atom, Keyword.t()) :: [:supervisor.child_spec()]
   def workers(module, opts) do
-    1..Jorb.config(:worker_count, opts, module)
-    |> Enum.map(fn i ->
-      %{
-        id: {module, :worker, i},
-        start: {Jorb.Worker, :start_link, [[{:module, module} | opts]]},
-        type: :worker,
-        restart: :permanent,
-        shutdown: 5000
-      }
-    end)
+    reader_count = Jorb.config(:reader_count, opts, module)
+    writer_count = Jorb.config(:writer_count, opts, module)
+    write_queues = Jorb.config(:write_queues, opts, module) || []
+
+    readers =
+      case reader_count do
+        0 ->
+          []
+
+        _ ->
+          for i <- 1..reader_count do
+            %{
+              id: {module, Jorb.Reader, i},
+              start: {Jorb.Reader, :start_link, [[{:module, module} | opts]]},
+              type: :worker,
+              restart: :permanent,
+              shutdown: 5000
+            }
+          end
+      end
+
+    writers =
+      case writer_count do
+        0 ->
+          []
+
+        _ ->
+          for i <- 1..writer_count,
+              queue <- write_queues do
+            batch_key = {queue, module, i}
+            opts = [{:batch_key, batch_key}, {:queue, queue}, {:module, module} | opts]
+
+            %{
+              id: {module, Jorb.Writer, queue, i},
+              start: {Jorb.Writer, :start_link, [opts]},
+              type: :worker,
+              restart: :permanent,
+              shutdown: 5000
+            }
+          end
+      end
+
+    readers ++ writers
   end
 
   @doc ~S"""
@@ -175,8 +206,8 @@ defmodule Jorb.Job do
     end)
   end
 
-  # @spec read_from_queues([queue], Keyword.t(), atom) ::
-  #        {:ok, [message], queue} | :none | {:error, String.t()}
+  # @spec read_from_queues([Jorb.queue], Keyword.t(), atom) ::
+  #        {:ok, [Jorb.message], Jorb.queue} | :none | {:error, String.t()}
   defp read_from_queues([], _opts, _module), do: :none
 
   defp read_from_queues([queue | rest], opts, module) do

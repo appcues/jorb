@@ -57,7 +57,7 @@ defmodule Jorb do
 
   Put the following into your `mix.exs` file's `deps` function:
 
-      {:jorb, "~> 0.3.0"}
+      {:jorb, "~> 0.4.0"}
 
   ## Configuration
 
@@ -77,11 +77,13 @@ defmodule Jorb do
   * `:backend` - the module implementing `Jorb.Backend`, default
     `Jorb.Backend.Memory`. You should set this to something
     else (like `Jorb.Backend.SQS` in production.
-  * `:worker_count` - number of workers to launch per job module,
+  * `:reader_count` - number of read workers to launch per job module,
     default `System.schedulers_online()`.
+  * `:writer_count` - number of message batch writers to launch, default 1.
   * `:write_batch_size` - number of messages to write at once, default 1.
   * `:write_interval` - milliseconds to wait before flushing outgoing
      messages, default 1000.
+  * `:write_queues` - list of queue names that might be written to.
   * `:read_batch_size` - number of messages to read at once, default 1.
   * `:read_interval` - milliseconds to sleep between fetching messages,
      default 1000.
@@ -94,8 +96,13 @@ defmodule Jorb do
 
   """
 
+  @type queue :: String.t()
+
+  @type message :: map()
+
   @defaults [
     backend: Jorb.Backend.Memory,
+    writer_count: 1,
     write_interval: 1000,
     write_batch_size: 1,
     read_duration: 0,
@@ -105,10 +112,10 @@ defmodule Jorb do
     perform_timeout: 5000,
 
     ## Overridden at runtime below
-    worker_count: nil
+    reader_count: nil
   ]
 
-  defp default(:worker_count), do: System.schedulers_online()
+  defp default(:reader_count), do: System.schedulers_online()
 
   defp default(param), do: @defaults[param]
 

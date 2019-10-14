@@ -1,0 +1,10 @@
+version: '3.1'
+volumes:
+  deps:
+services:
+  localstack:
+    image: localstack/localstack
+    environment:
+      - SERVICES=sqs:27345
+    ports:
+      - "27345:27345"

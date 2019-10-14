@@ -4,7 +4,7 @@ defmodule Jorb.Mixfile do
   def project do
     [
       app: :jorb,
-      version: "0.3.0",
+      version: "0.4.0",
       elixir: "~> 1.5",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -43,12 +43,13 @@ defmodule Jorb.Mixfile do
   defp deps do
     [
       {:ex_aws, "~> 2.0"},
-      {:ex_aws_sqs, "~> 2.0"},
+      {:ex_aws_sqs, "~> 3.0"},
       {:hackney, "~> 1.9"},
       {:sweet_xml, "~> 0.6"},
       {:poison, "~> 1.0"},
+      {:uuid, "~> 1.1"},
       {:ex_doc, "~> 0.16", only: :dev, runtime: false},
-      {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
+      {:dialyxir, "~> 0.5", only: [:dev, :test], runtime: false},
       {:excoveralls, "~> 0.11", only: :test}
     ]
   end
