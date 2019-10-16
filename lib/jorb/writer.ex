@@ -2,7 +2,6 @@ defmodule Jorb.Writer do
   @moduledoc false
 
   use GenServer
-  import Jorb.Utils
 
   @type batch_key :: {Jorb.queue(), atom, non_neg_integer}
 
@@ -48,7 +47,7 @@ defmodule Jorb.Writer do
     else
       batch_key = get_batch_key(queue, opts, module)
 
-      with_ets_lock(@table, batch_key, fn
+      EtsLock.with_ets_lock(@table, batch_key, fn
         [] ->
           :ets.insert(@table, {batch_key, [message]})
           :ok
@@ -75,7 +74,7 @@ defmodule Jorb.Writer do
   def flush_batch({queue, module, _n} = batch_key, opts) do
     backend = Jorb.config(:backend, opts, module)
 
-    with_ets_lock(@table, batch_key, fn
+    EtsLock.with_ets_lock(@table, batch_key, fn
       [] ->
         :ok
 

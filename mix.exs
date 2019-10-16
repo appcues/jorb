@@ -48,6 +48,7 @@ defmodule Jorb.Mixfile do
       {:sweet_xml, "~> 0.6"},
       {:poison, "~> 1.0"},
       {:uuid, "~> 1.1"},
+      {:ets_lock, "~> 0.2.0"},
       {:ex_doc, "~> 0.16", only: :dev, runtime: false},
       {:dialyxir, "~> 0.5", only: [:dev, :test], runtime: false},
       {:excoveralls, "~> 0.11", only: :test}
