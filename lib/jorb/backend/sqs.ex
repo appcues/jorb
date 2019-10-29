@@ -121,4 +121,9 @@ defmodule Jorb.Backend.SQS do
       :ok
     end
   end
+
+  @impl true
+  def message_body(message) do
+    message.body |> Jason.decode()
+  end
 end

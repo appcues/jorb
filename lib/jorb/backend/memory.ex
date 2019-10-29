@@ -81,4 +81,9 @@ defmodule Jorb.Backend.Memory do
   def delete_message(queue, message, opts) do
     GenServer.call(__MODULE__, {:delete_message, queue, message, opts})
   end
+
+  @impl Jorb.Backend
+  def message_body(message) do
+    {:ok, message}
+  end
 end
