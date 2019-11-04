@@ -14,5 +14,5 @@ config :ex_aws, :sqs,
   secret_access_key: "bar",
   scheme: "http://",
   host: "localhost",
-  port: 27345,
+  port: 32124,
   region: "us-west-2"

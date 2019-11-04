@@ -47,6 +47,7 @@ defmodule Jorb.Mixfile do
       {:hackney, "~> 1.9"},
       {:sweet_xml, "~> 0.6"},
       {:poison, "~> 1.0"},
+      {:jason, "~> 1.0"},
       {:uuid, "~> 1.1"},
       {:ets_lock, "~> 0.2.1"},
       {:ex_doc, "~> 0.16", only: :dev, runtime: false},

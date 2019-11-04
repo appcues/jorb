@@ -186,20 +186,17 @@ defmodule Jorb.Job do
   defp performance_task(message, queue, opts, module) do
     backend = Jorb.config(:backend, opts, module)
 
+    {:ok, body} = backend.message_body(message)
+    payload = body["body"]
+
     job_module =
-      case message["target"] do
+      case body["target"] do
         target when is_binary(target) -> String.to_existing_atom(target)
         target -> target
       end
 
-    body =
-      case message["body"] do
-        body when is_binary(body) -> Poison.decode!(body)
-        body -> body
-      end
-
     Task.async(fn ->
-      case job_module.perform(body) do
+      case job_module.perform(payload) do
         :ok -> backend.delete_message(queue, message, opts)
         _ -> :oh_well
       end
