@@ -29,10 +29,26 @@ defmodule Jorb.Application do
       Application.get_env(:jorb, :application)
       |> :application.get_key(:modules)
 
+    namespace_config = Application.get_env(:jorb, :namespace)
+
     Enum.filter(all_modules, fn mod ->
       mod
       |> Atom.to_string()
-      |> String.starts_with?(Application.get_env(:jorb, :namespace))
+      |> (fn
+            str ->
+              case namespace_config do
+                namespaces when is_list(namespace_config) ->
+                  Enum.any?(namespaces, fn namespace ->
+                    String.starts_with?(str, namespace)
+                  end)
+
+                namespace when is_binary(namespace_config) ->
+                  String.starts_with?(str, namespace)
+
+                _ ->
+                  false
+              end
+          end).()
     end)
   end
 end
