@@ -19,8 +19,11 @@ defmodule Jorb.Application do
   def fetchers_per_queue do
     Enum.map(jobs_modules(), fn mod ->
       queue_name = apply(mod, :queue_name, [])
+      mod_name = mod |> Atom.to_string()
 
-      {Jorb.Fetcher, queue_name}
+      queue_and_mod_name = "#{queue_name}-#{mod_name}"
+
+      {Jorb.Fetcher, queue_and_mod_name}
     end)
   end
 
