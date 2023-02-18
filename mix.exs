@@ -51,7 +51,7 @@ defmodule Jorb.Mixfile do
       {:uuid, "~> 1.1"},
       {:ets_lock, "~> 0.2.1"},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
-      {:dialyxir, "~> 0.5", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
       {:excoveralls, "~> 0.11", only: :test}
     ]
   end
