@@ -45,7 +45,7 @@ defmodule Jorb.Mixfile do
       {:ex_aws, "~> 2.0"},
       {:ex_aws_sqs, "~> 3.0"},
       {:hackney, "~> 1.9"},
-      {:sweet_xml, "~> 0.6"},
+      {:sweet_xml, "~> 0.7"},
       {:poison, "~> 1.0"},
       {:jason, "~> 1.0"},
       {:uuid, "~> 1.1"},
